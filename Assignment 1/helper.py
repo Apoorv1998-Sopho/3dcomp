@@ -19,20 +19,27 @@ def covolv(target, filtr):
     #assuming the filter is odd x odd
     padding = int(int(filtr.shape[0])/2)
     filterSize = filtr.shape[0]
-    filtr = filtr.T
-    padTarget = padd(target, padding)
-    NewTarget = padd(target, padding)
-    
     n, m = target.shape # n x m
-    for i in range(padding, n + padding):
-        for j in range(padding, m + padding):
+
+    # gave extra padding to original image and made a big matrix to return
+    padTarget = padd(target, padding)
+    NewTarget = np.zeros((n + padding, m + padding))
+    
+    #move filter over all points in matrix
+    for trxx in range(padding, n + padding):
+        for tryy in range(padding, m + padding):
             s = 0
-            for l in range(filterSize):
-                for k in range(filterSize):
-                    s += filtr[l, k] * padTarget[i + l - padding,\
-                                                 j + k - padding]
-            NewTarget[i,j] = s
-    return NewTarget[padding:n + padding, padding:m + padding]
+            
+            #find the dot product of filter + submatrix
+            for fx in range(filterSize):
+                for fy in range(filterSize):
+                    srx = trxx + fx - padding
+                    sry = tryy + fy - padding
+                    s += filtr[fx, fy] * padTarget[srx, sry]
+            NewTarget[trxx,tryy] = s
+
+    # returning trimmed big matrix and typecated unsignedint8
+    return NewTarget[padding:n + padding, padding:m + padding].astype(np.uint8)
 
 
 # gaussian filter generator function
@@ -71,7 +78,7 @@ def gaussian_eq(dim, std):
     # normalizing the filter
     sumx = np.sum(filtr, axis=1)
     sumy = np.sum(sumx, axis=0)
-    return filtr
+    return filtr / sumy
 
 
 # printing in scientific notations
@@ -82,4 +89,35 @@ def prettyPrint(ary):
             print('{:.3e}'.format(ary[i,j]) + ' | ', end='')
         print ('{:.3e}'.format(ary[i,m-1]))
 
+def readImg_Grey_Resize(file, scale=1):
+    I1 = cv.imread('imgs/3_1.jpg')
+    height, width, channels = I1.shape
+    
+    # show raw img
+    cv.namedWindow('raw', cv.WINDOW_NORMAL)
+    cv.imshow('raw',I1)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+    # convert to grey
+    I1_gray = cv.cvtColor(I1,cv.COLOR_BGR2GRAY);
+    
+    # show greyed image
+    cv.namedWindow('grey', cv.WINDOW_NORMAL)
+    cv.imshow('grey',I1_gray)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+    
+    # resize img
+    if (scale != 1):
+        I1_resized = cv.resize(I1_gray,None, fx = scale, fy = scale, \
+                         interpolation = cv.INTER_CUBIC)
+        cv.namedWindow('resized', cv.WINDOW_NORMAL)
+        cv.imshow('resized',I1_resized)
+        cv.waitKey(0)
+        cv.destroyAllWindows()
+        return I1_resized
+    
+    else:
+        return I1_gray
+        
 # white balance the resulting matrix
