@@ -47,38 +47,26 @@ def gaussian_eq(dim, std):
     filtr = np.zeros((dim, dim))
     padding = int(dim/2)
 
-    for x in range(dim - padding):
-        for y in range(dim - padding):
-            # using the gaussian equation to find the value of pixle
+    for fx in range(dim):
+        for fy in range(dim):
+            x = fx - padding
+            y = fy - padding
+            # using the gaussian equation to find the value at pixel x,y
             g = 1./(2*math.pi*std**2) * math.exp(-(x**2 + y**2)/(2*std**2))
-            filtr[x + padding, y + padding] = g * 1e0
-            
-    '''
-    Our matrix till now is of the form(assuming dim=5):
-    
-    0 | 0 | 0 | 0 | 0
-    0 | 0 | 0 | 0 | 0
-    0 | 0 | O | v | x
-    0 | 0 | v | x | w
-    0 | 0 | x | w | z
-    
-    Using some flipping functions to populate the
-    rest of the matrix (filter) to finally get
-    
-    z | w | x | w | z
-    w | x | v | x | w
-    x | v | O | v | x
-    w | x | v | x | w
-    z | w | x | w | z
-    '''
+            filtr[fx, fy] = g
 
-    filtr[:padding, :] = np.flip(filtr[dim - padding:, :], axis=0)
-    filtr[:, :padding] = np.flip(filtr[:, dim - padding:], axis=1)
-    
     # normalizing the filter
-    sumx = np.sum(filtr, axis=1)
-    sumy = np.sum(sumx, axis=0)
-    return filtr / sumy
+    normalizer = 0
+    for i in range(dim):
+        for k in range(dim):
+            normalizer += filtr[i,k]
+            
+    # dividing the filter elements with the sum of all the elements.
+    for i in range(dim):
+        for k in range(dim):
+            filtr[i,k] /= normalizer
+    
+    return filtr
 
 
 # printing in scientific notations
