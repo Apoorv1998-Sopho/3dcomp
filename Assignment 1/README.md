@@ -35,3 +35,12 @@ In this part we convolve our image with the filter generated in part(a) of Q2.
 ##### Part c
 In this part we call the custom function `detectZeroCrossings()` to mark the pixels
 within a certain `epsilon` as edges.
+
+-----
+
+### Report
+Check `Report` for the report for the assignment.
+
+Addtionaly:
+
+Look at the ipython notebook for all the questions and thier different parts. I have added the results as markdown images so one doesn't need to run the functions to get the results on the images.
