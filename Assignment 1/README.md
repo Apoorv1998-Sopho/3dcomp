@@ -38,9 +38,8 @@ within a certain `epsilon` as edges.
 
 -----
 
-### Report
+# Report
 Check `Report` for the report for the assignment.
 
-Addtionaly:
-
+Additionaly:
 Look at the ipython notebook for all the questions and thier different parts. I have added the results as markdown images so one doesn't need to run the functions to get the results on the images.
