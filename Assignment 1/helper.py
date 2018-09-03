@@ -15,7 +15,7 @@ def padd(target, padding):
 
 
 # covolution function
-def covolv(target, filtr):
+def covolv(target, filtr, typ=None):
     #assuming the filter is odd x odd
     padding = int(int(filtr.shape[0])/2)
     filterSize = filtr.shape[0]
@@ -38,8 +38,10 @@ def covolv(target, filtr):
                     s += filtr[fx, fy] * padTarget[srx, sry]
             NewTarget[trxx,tryy] = s
 
-    # returning trimmed big matrix and typecated unsignedint8
-    return NewTarget[padding:n + padding, padding:m + padding].astype(np.uint8)
+    # returning trimmed big matrix and typecated to type provided
+    if typ == None:
+        typ = filtr.dtype
+    return NewTarget[padding:n + padding, padding:m + padding].astype(typ)
 
 
 # gaussian filter generator function
@@ -107,5 +109,17 @@ def readImg_Grey_Resize(file, scale=1):
     
     else:
         return I1_gray
-        
-# white balance the resulting matrix
+
+# detecting Zero Crossings, w.r.t. given epsilon
+def detectZeroCrossings(arry, epsilon):
+    n, m = arry.shape
+    r = np.zeros((n,m), dtype=np.uint8)
+    
+    for i in range(n):
+        for k in range(m):
+            if (abs(arry[i, k]) <= epsilon):
+                r[i,k] = 255
+            else:
+                r[i,k] = 0
+    
+    return r

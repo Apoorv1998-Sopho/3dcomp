@@ -33,5 +33,5 @@ differance and store the result in `DOG`.
 In this part we convolve our image with the filter generated in part(a) of Q2.
 
 ##### Part c
-In this part we call the custom function `edgify()` to mark the pixels above a
-certain threshold as edges.
+In this part we call the custom function `detectZeroCrossings()` to mark the pixels
+within a certain `epsilon` as edges.
