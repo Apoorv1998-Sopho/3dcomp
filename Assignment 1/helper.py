@@ -110,16 +110,42 @@ def readImg_Grey_Resize(file, scale=1):
     else:
         return I1_gray
 
-# detecting Zero Crossings, w.r.t. given epsilon
-def detectZeroCrossings(arry, epsilon):
+''' 
+brief:
+detecting Zero Crossings, in a given array.
+
+@param arry: input matrix
+@param method: among the possible methods
+  choose a specific method to find zero
+  crossings
+  
+  (0) - see for sign change (+ to -) in 4
+   neigbours.
+  
+  (1) - make any pixel within epsilon 255 (edge)
+  
+@param epsilon corresponds to method = 1
+'''
+def detectZeroCrossings(arry, method = 0, epsilon = 1):
     n, m = arry.shape
     r = np.zeros((n,m), dtype=np.uint8)
     
-    for i in range(n):
-        for k in range(m):
-            if (abs(arry[i, k]) <= epsilon):
-                r[i,k] = 255
-            else:
-                r[i,k] = 0
+    if (method == 0):
+        for i in range(n):
+            for k in range(m):
+                try:
+                    s = min(arry[i,k-1], arry[i,k+1], \
+                            arry[i-1,k], arry[i+1,k])
+                    if(arry[i,k]>=0 and s < 0):
+                        r[i,k] = 255
+                except IndexError:
+                    r[i,k] = 255
+    else: #(method == 1)
+        for i in range(n):
+            for k in range(m):
+                if (abs(arry[i, k]) <= epsilon):
+                    r[i,k] = 255
+                else:
+                    r[i,k] = 0
     
     return r
