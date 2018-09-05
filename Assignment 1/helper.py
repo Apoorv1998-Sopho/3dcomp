@@ -44,8 +44,13 @@ def covolv(target, filtr, typ=None):
     return NewTarget[padding:n + padding, padding:m + padding].astype(typ)
 
 
-# gaussian filter generator function
-def gaussian_eq(dim, std):
+# gaussian filter (normalized) generator function
+def gaussian_nor(dim, std):
+    filtr = gaussian(dim, std)
+    return normalize(filtr) 
+
+# gaussian filter, not normalized
+def gaussian(dim, std):
     filtr = np.zeros((dim, dim))
     padding = int(dim/2)
 
@@ -56,19 +61,34 @@ def gaussian_eq(dim, std):
             # using the gaussian equation to find the value at pixel x,y
             g = 1./(2*math.pi*std**2) * math.exp(-(x**2 + y**2)/(2*std**2))
             filtr[fx, fy] = g
+    
+    return filtr
 
-    # normalizing the filter
+# normalizing the filter
+def normalize(filtr):
+    dim, dim = filtr.shape
+    r_filtr = np.zeros((dim, dim))
     normalizer = 0
     for i in range(dim):
         for k in range(dim):
-            normalizer += filtr[i,k]
+            '''
+            Assumption:
+               As we saw that sobel filter
+               sum is 0 but we don't divide the
+               filter by 0, instead we divide by 
+               sum of absolute values of each 
+               element in the filter, similiarly I 
+               have taken summation of absolute 
+               values for normalizing.
+            '''
+            normalizer += abs(filtr[i,k])
             
     # dividing the filter elements with the sum of all the elements.
     for i in range(dim):
         for k in range(dim):
-            filtr[i,k] /= normalizer
+            r_filtr[i,k] = filtr[i,k]/normalizer
     
-    return filtr
+    return r_filtr    
 
 
 # printing in scientific notations
