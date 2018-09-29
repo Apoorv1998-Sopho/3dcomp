@@ -100,7 +100,7 @@ def prettyPrint(ary):
         print ('{:.3e}'.format(ary[i,m-1]))
 
 def readImg_Grey_Resize(file, scale=1):
-    I1 = cv.imread('imgs/3_1.jpg')
+    I1 = cv.imread(file)
     height, width, channels = I1.shape
     
     # show raw img
