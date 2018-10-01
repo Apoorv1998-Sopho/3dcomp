@@ -45,13 +45,13 @@ for i in range(octaves):
     for j in range(scales):
         #find the related sigam
         newsigma = sigma*(k**((i*2)+j))
-        Container[(i,j)]=blur(newBaseImg.astype(np.float32),3, newsigma)
+        # Container[(i,j)]=blur(newBaseImg.astype(np.float32),3, newsigma)
+        Container[(i,j)]=cv.GaussianBlur(newBaseImg.astype(np.float32), (3,3), newsigma)
 print('Blurring done')
 #imageshowing
 for i in range(octaves):
     for j in range(scales):
         cv.namedWindow('gaussed', cv.WINDOW_NORMAL)
-        cv.imwrite(result+"Blurred_Octave_"+str(i)+"_scale_"+str(j)+"_.jpg", Container[(i,j)].astype(np.uint8))
         cv.imshow('gaussed',Container[(i,j)].astype(np.uint8))
         cv.waitKey(0)
         cv.destroyAllWindows()
@@ -66,7 +66,6 @@ print('Dogs calculated')
 for i in range(octaves):
     for j in range(scales-1):
         cv.namedWindow('dogs', cv.WINDOW_NORMAL)
-        cv.imwrite(result+"Dogs_Octave_"+str(i)+"_scale_"+str(j)+"_.jpg", Dogs[(i,j)])
         cv.imshow('dogs',Dogs[(i,j)])
         cv.waitKey(0)
         cv.destroyAllWindows()
@@ -145,7 +144,6 @@ for i in range(octaves):
             for ke in Keypoints[key]:
                 cv.circle(draw, ke, 5, (0,0,0), 1)
     cv.namedWindow('Keypts', cv.WINDOW_NORMAL)
-    cv.imwrite(result+"Keypts_Octave_"+str(i)+"_scale_"+str(j)+"_.jpg", draw)
     cv.imshow('Keypts',draw)
     cv.waitKey(0)
     cv.destroyAllWindows()
