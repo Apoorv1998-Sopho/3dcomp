@@ -315,6 +315,16 @@ def giveDiscript(mMatrix, thetaMatrix, Keypoints):
                             KeyPtOrientation[(i,j)][ke].extend(mTheta)
                         except:
                             KeyPtOrientation[(i,j)]={ke:mTheta}
+
+                        try:
+                            discript = KeyPtOrientation[(i,j)][ke]
+                        except:
+                            discript = [0]*128
+                        # Normalizing and clipping Descriptor Values
+                        discript = discript/np.linalg.norm(discript)
+                        discript = np.clip(discript,0,0.2)
+                        discript = discript/np.linalg.norm(discript)
+                        KeyPtOrientation[(i,j)][ke]=discript
     return KeyPtOrientation
 
 
@@ -352,4 +362,5 @@ def bts2(p,q,ke, theta_oc, m_slice):
 
     return discriptr
 
-discript = giveDiscript(mMatrix, thetaMatrix, Keypoints)
+discriptr = giveDiscript(mMatrix, thetaMatrix, Keypoints)
+np.save("./result/dicriptor", discriptr)
