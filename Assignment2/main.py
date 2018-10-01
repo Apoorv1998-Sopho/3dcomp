@@ -45,8 +45,8 @@ for i in range(octaves):
     for j in range(scales):
         #find the related sigam
         newsigma = sigma*(k**((i*2)+j))
-        # Container[(i,j)]=blur(newBaseImg.astype(np.float32),3, newsigma)
-        Container[(i,j)]=cv.GaussianBlur(newBaseImg.astype(np.float32), (3,3), newsigma)
+        Container[(i,j)]=blur(newBaseImg.astype(np.float32),3, newsigma)
+        # Container[(i,j)]=cv.GaussianBlur(newBaseImg.astype(np.float32), (3,3), newsigma)
 print('Blurring done')
 #imageshowing
 for i in range(octaves):
