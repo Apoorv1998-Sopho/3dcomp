@@ -19,7 +19,7 @@ k = 2**.5
 result = "./result/"
 
 # read img and convert to grey (resized)
-img = hp.readImg_Grey_Resize(file='imgs/5_1.jpg', scale=1)
+img = hp.readImg_Grey_Resize(file='imgs/5_1.jpg', scale=.8)
 
 # guassian blur
 def blur(img, dim, newsigma):
@@ -37,6 +37,7 @@ def absolDiff(img2, img1):
 
 # Q1
 # generating scale space
+print ("Starting blurring.")
 for i in range(octaves):
     # For different octaves
     scale = 1./(2**i)
@@ -44,7 +45,7 @@ for i in range(octaves):
     for j in range(scales):
         #find the related sigam
         newsigma = sigma*(k**((i*2)+j))
-        Container[(i,j)]=cv.GaussianBlur(newBaseImg.astype(np.float32), (3,3), newsigma)
+        Container[(i,j)]=blur(newBaseImg.astype(np.float32),3, newsigma)
 print('Blurring done')
 #imageshowing
 for i in range(octaves):
@@ -56,6 +57,7 @@ for i in range(octaves):
         cv.destroyAllWindows()
 
 # generating dogs
+print ("Starting difference of Gaussians")
 for i in range(octaves):
     for j in range(scales-1):
         Dogs[(i,j)]= Container[i,j] - Container[i,j+1]
@@ -189,6 +191,7 @@ def thetaAssign(Container):
             Theta[(i,j-2)] = r[1:-1,1:-1]
     return Theta
 
+print ("Starting Orientations")
 mMatrix = mAssign(Container)
 thetaMatrix = thetaAssign(Container)
 
@@ -263,6 +266,7 @@ def bts(ke, m_oc, theta_oc, newsigma):
     return (max_m, bucket_i*10 + 5)
 
 Orientations = Orientation(mMatrix, thetaMatrix, Keypoints)
+print ("Done Orientations")
 for o in range(octaves):
     for j in range(1, scales-2):
         ori = Container[(o,j)].astype(np.uint8)
@@ -292,7 +296,10 @@ def giveDiscript(mMatrix, thetaMatrix, Keypoints):
         for j in range(scales-3):
             m_oc = mMatrix[(i,j)]
             theta_oc = thetaMatrix[(i,j)]
-            keypts_oc = Keypoints[(i,j)]
+            try:
+                keypts_oc=Keypoints[(i,j)]
+            except:
+                keypts_oc=np.array([])
             newsigma = 8
             rows, cols = theta_oc.shape
             # for every keypoint dicovered
@@ -308,7 +315,7 @@ def giveDiscript(mMatrix, thetaMatrix, Keypoints):
             
                         mTheta = bts2(p, q, ke, theta_oc, m_slice)
                         if not mTheta:
-                            continue
+                            mTheta=[0]*8
 
                         # if mTheta is defined
                         try:
@@ -316,15 +323,16 @@ def giveDiscript(mMatrix, thetaMatrix, Keypoints):
                         except:
                             KeyPtOrientation[(i,j)]={ke:mTheta}
 
-                        try:
-                            discript = KeyPtOrientation[(i,j)][ke]
-                        except:
-                            discript = [0]*128
-                        # Normalizing and clipping Descriptor Values
-                        discript = discript/np.linalg.norm(discript)
-                        discript = np.clip(discript,0,0.2)
-                        discript = discript/np.linalg.norm(discript)
-                        KeyPtOrientation[(i,j)][ke]=discript
+                try:
+                    discript = KeyPtOrientation[(i,j)][ke]
+                except:
+                    discript = [1]*128
+                discript=np.array(discript)
+                # Normalizing and clipping Descriptor Values
+                discript = discript/np.linalg.norm(discript)
+                discript = np.clip(discript,0,0.2)
+                discript = discript/np.linalg.norm(discript)
+                KeyPtOrientation[(i,j)][ke]=discript
     return KeyPtOrientation
 
 
@@ -335,32 +343,19 @@ def bts2(p,q,ke, theta_oc, m_slice):
     if rows < 4 or cols < 4:
         return None
     theta_slice = theta_oc[ke[0]+a:ke[0]+a+4, ke[1]+b:ke[1]+b+4]
+    rows , cols = theta_slice.shape
+    if rows < 4 or cols < 4:
+        return None
     
     # getting the histogram
-    buckets={}
+    msum=[0]*8
     for i in range(4):
         for j in range(4):
-            try:
-                buckets[int(m_slice[i,j]//45)].append((ke[0]+a+i,ke[1]+b+j))
-            except KeyError:
-                buckets[int(m_slice[i,j]//45)]= [(ke[0]+a+i,ke[1]+j+b)]
-    
-    '''
-    getting the max sum of m values for all the
-    elements within a bucket.
-    If we have multiple buckets with same 
-    max values, i take the convention of 
-    selecting the first one
-    '''
-    discriptr = []
-    for i in range(4):
-        try:
-            discriptr.append(buckets[i][0])
-            discriptr.append(buckets[i][1])
-        except:
-            discriptr.extend([0,0])
-
-    return discriptr
-
+            msum[int(theta_slice[i,j]//45)]+= m_slice[i,j]
+    return msum
+print ("Starting Discriptors")
 discriptr = giveDiscript(mMatrix, thetaMatrix, Keypoints)
-np.save("./result/dicriptor", discriptr)
+print ("Done Discriptors | Lookat ./results/dicriptor")
+np.save("./results/dicriptor", discriptr)
+# the file contains the dicriptors in a dictionary with key as (octave, scale)
+input()
