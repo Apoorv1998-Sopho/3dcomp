@@ -12,3 +12,5 @@ The python file `main.py` contains the Questions with the corresponding parts. R
 
 ### Results:
 For the results look at the folder named `results` to have a look at the files generated. The file names are such that the correspond to the octave and the scale they are from.
+
+Also the `dicriptors` I got are saved as a numpy array file in `results`.
