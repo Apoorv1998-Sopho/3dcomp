@@ -4,44 +4,24 @@ Author: Apoorv Agnihotri
 Code samples from:
 https://kushalvyas.github.io/stitching.html
 '''
-
-import cv2 as cv
-import numpy as np
-import sys
-
-path = './Images_Asgnmt3_1/I1/'
-imagesNames = ['a', 'b', 'c', 'd', 'e', 'f']
-scale = (0.3, 0.3)
-images = [] # will have 3 channel color imgs
-imageNos = len(imagesNames)
-
-for i in range(imageNos):
-    print(path + imagesNames[i])
-    temp = cv.imread(path + imagesNames[i])
-    temp = cv.resize(temp, None, fx=scale[0], fy=scale[1], interpolation=cv.INTER_CUBIC)
-    images.append(temp)
-del temp
-
-imageKeyPoints = []
-imageDescriptors = []
-
-sift = cv.xfeatures2d.SIFT_create()
-for i in range(imageNos):
-
 # images is a list of numpy arrays, containing images
-def keyPoints(images): # add an option to send a list of strings, where keypoints return
-    # for every image find keypoint discriptors    
+def keyPoints(images, imagesNames): # add an option to send a list of strings, where keypoints return
+    # for every image find keypoint discriptors
+    sift = cv.xfeatures2d.SIFT_create()
     imageKeyPoints = {}
     imageDescriptors = {}
-    for img in imagesNames:
+    for i in range(imageNames):
+        img = images[i]
+        imgName = imageNames[i]
+
+        # finding dicriptors
         img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         keyPoints, descriptors = sift.detectAndCompute(img, None)
-        imageDescriptors[img] = descriptors
-        imageKeyPoints[img] = keyPoints
+        imageDescriptors[imgName] = descriptors
+        imageKeyPoints[imgName] = keyPoints
 
     # compare each image with every other
-    pass
-
+    return (imageKeyPoints, imageDescriptors)
 
 def keyPointMatching(imgA, imgB)
     imageKeyPoints = []
@@ -104,6 +84,62 @@ def stitch(imgA, imgB, H, s, ratio=0.75, reporjThrest=4.0):
     return result
 
 
+
+##########################################################
+import cv2 as cv
+import numpy as np
+import sys
+
+
+##########################################################
+#Reading files
+##########################################################
+path = './Images_Asgnmt3_1/I1/'
+imagesNames = ['a', 'b', 'c', 'd', 'e', 'f']
+scale = (0.3, 0.3)
+images = [] # will have 3 channel color imgs
+imageNos = len(imagesNames)
+m = 3
+k = 4
+
+
+##########################################################
+#Rescaling
+##########################################################
+for i in range(imageNos):
+    print(path + imagesNames[i])
+    temp = cv.imread(path + imagesNames[i])
+    temp = cv.resize(temp, None, fx=scale[0], fy=scale[1], interpolation=cv.INTER_CUBIC)
+    images.append(temp)
+del temp
+
+
+##########################################################
+#Finding KeyPoints and Discriptors
+##########################################################
+imageKeyPoints, imageDescriptors = keyPoints(images, imagesNames)
+# retured dictionaries with keys as imageNames
+
+
+##########################################################
+#Finding matchings for best 'm' matching images for each image
+##########################################################
+
+
+##########################################################
+#Finding H for each of the pairs of images
+##########################################################
+
+
+##########################################################
+#Wrapping the images together using H
+##########################################################
+
+
+##########################################################
+#Finding matchings for best 'm' matching images for each image
+##########################################################
+
 H, s = keyPointMatching(images[0], images[1])
 result = stitch(images[1], images[0], H, s)
 cv.imshow("correspondences", result)
@@ -140,6 +176,19 @@ for mat in matches:
 '''
 
 '''
+
+# n is the number of times to repeat ransac
+# t is the number of pixels tolerance allowed
+# T is the ratio of the for which we terminate early.
+def findHomoRanSac(n, m, list_kp1, list_kp2, matches, t, T):
+    for i in range(n):
+        P = make_P(list_kp1, list_kp2)
+        H, Si = findH_Si(P, matches, t, T)
+
+'''
+
+
+'''
 I assume that i recieve 2 lists, in which i have k points
 
 def make_P(list_kp1, list_kp2):
@@ -147,7 +196,7 @@ def make_P(list_kp1, list_kp2):
 
     # making P matrix
     P = np.zeros((2k, 9))
-    for i in range(0,2*k,2)
+    for i in range(0,2*k,2):
         pi = np.zeros((2,9))
         x = list_kp1[i/2][0]
         x_ = list_kp2[i/2][0]
@@ -169,14 +218,18 @@ def make_P(list_kp1, list_kp2):
 '''
 
 '''
-def findH_Si(P, matches, tol):
-    # do svd on P
-
-    # get H
+def findH_Si(P, matches, t, T):
+    # do svd on P get perlimns H
 
     # multiply all the matches and find if within tol
 
-    # increase counter
+    # increase counter if within t
 
-    # return H and count
+    # if counter crosses T
+        # recalculate H for the Si set
+        # return H and count
+
+    # else
+        # recalculate H for the Si set
+        # return H and count corresp to biggest set
 '''
