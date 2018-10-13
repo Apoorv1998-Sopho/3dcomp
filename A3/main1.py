@@ -10,31 +10,19 @@ def keyPoints(images, imagesNames): # add an option to send a list of strings, w
     sift = cv.xfeatures2d.SIFT_create()
     imageKeyPoints = {}
     imageDescriptors = {}
-    for i in range(imageNames):
+    for i in imagesNames:
         img = images[i]
-        imgName = imageNames[i]
 
         # finding dicriptors
         img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         keyPoints, descriptors = sift.detectAndCompute(img, None)
-        imageDescriptors[imgName] = descriptors
-        imageKeyPoints[imgName] = keyPoints
+        imageDescriptors[i] = descriptors
+        imageKeyPoints[i] = keyPoints
 
     # compare each image with every other
     return (imageKeyPoints, imageDescriptors)
 
-def keyPointMatching(imgA, imgB)
-    imageKeyPoints = []
-    imageDescriptors = []
-    imgA = cv.cvtColor(imgA, cv.COLOR_BGR2GRAY)
-    keyPoints, descriptors = sift.detectAndCompute(imgA, None)
-    imageDescriptors.append(descriptors)
-    imageKeyPoints.append(keyPoints)
-    imgB = cv.cvtColor(imgB, cv.COLOR_BGR2GRAY)
-    keyPoints, descriptors = sift.detectAndCompute(imgB, None)
-    imageDescriptors.append(descriptors)
-    imageKeyPoints.append(keyPoints)
-
+def keyPointMatching(imageDescriptors, imgA, imgB):
     FLANN_INDEX_KDTREE = 0
     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
     search_params = dict(checks=50)   # or pass empty dictionary
@@ -42,40 +30,46 @@ def keyPointMatching(imgA, imgB)
     flann = cv.FlannBasedMatcher(index_params,search_params)
     # print('1 ', len(imageDescriptors[0]))
     # print('2 ', len(imageDescriptors[1]))
-    print (type(imageDescriptors[0]))
-    matches = flann.knnMatch(imageDescriptors[1], imageDescriptors[0], k=2)
-    print (type(matches), matches[0],'type of matches[0][0]'+str(type(matches[0][0])) , matches[0][0], matches[0][0].trainIdx)
+    # print (type(imageDescriptors[imgA]))
+    matches = flann.knnMatch(imageDescriptors[imgB],
+                             imageDescriptors[imgA], k=2)
+                             # matches 2 nearest neigbours
+
+    #using lows ratio test
     good = []
     for i, (m, n) in enumerate(matches):
-        if m.distance < 0.7 * n.distance:
+        if m.distance < 0.7 * n.distance: # if closest match is ratio 
+                                          # closer than the second closest one,
+                                          # then the match is good
             good.append((m.trainIdx, m.queryIdx))
 
     #print(type(matches))
-    print('3 ', len(matches))
     matchesMask = [[0,0] for i in range(len(matches))]
-    print(matchesMask)
     draw_params = dict(matchColor=(0,255,0),
                       singlePointColor=(255,0,0),
                       matchesMask=matchesMask,
                       flags=0)
-    img3 = cv.drawMatchesKnn(images[0], imageKeyPoints[0], images[1], imageKeyPoints[1], matches, None, **draw_params)
+    img3 = cv.drawMatchesKnn(images[imgA], imageKeyPoints[imgA], images[imgB],
+                             imageKeyPoints[imgB], matches, None, **draw_params)
 
     cv.imshow("correspondences", img3)
-    print('length goog ', len(good))
+    # print('length of all matches ', len(matches))
+    # print('length good matches ', len(good))
     cv.waitKey()
-    if len(good) > 4:
-        pointsCurrent = imageKeyPoints[1]
-        pointsPrevious = imageKeyPoints[0]
+    return good
+    # if len(good) > 4:
+    #     pointsCurrent = imageKeyPoints[1]
+    #     pointsPrevious = imageKeyPoints[0]
 
-        matchedPointsCurrent = np.float32(
-            [pointsCurrent[i].pt for (__, i) in good]
-        )
-        matchedPointsPrev = np.float32(
-            [pointsPrevious[i].pt for (i, __) in good]
-        )
-        #print(len(matchedPointsCurrent))
-        H, s = cv.findHomography(matchedPointsCurrent, matchedPointsPrev, cv.RANSAC, 4)
-    return (H, s)
+    #     matchedPointsCurrent = np.float32(
+    #         [pointsCurrent[i].pt for (__, i) in good]
+    #     )
+    #     matchedPointsPrev = np.float32(
+    #         [pointsPrevious[i].pt for (i, __) in good]
+    #     )
+    #     #print(len(matchedPointsCurrent))
+    #     H, s = cv.findHomography(matchedPointsCurrent, matchedPointsPrev, cv.RANSAC, 4)
+    # return (H, s)
 
 
 def stitch(imgA, imgB, H, s, ratio=0.75, reporjThrest=4.0):
@@ -95,9 +89,9 @@ import sys
 #Reading files
 ##########################################################
 path = './Images_Asgnmt3_1/I1/'
-imagesNames = ['a', 'b', 'c', 'd', 'e', 'f']
+imagesNames = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg']
 scale = (0.3, 0.3)
-images = [] # will have 3 channel color imgs
+images = {} # will have 3 channel color imgs
 imageNos = len(imagesNames)
 m = 3
 k = 4
@@ -106,11 +100,11 @@ k = 4
 ##########################################################
 #Rescaling
 ##########################################################
-for i in range(imageNos):
-    print(path + imagesNames[i])
-    temp = cv.imread(path + imagesNames[i])
+for img in imagesNames:
+    print(path + img)
+    temp = cv.imread(path + img)
     temp = cv.resize(temp, None, fx=scale[0], fy=scale[1], interpolation=cv.INTER_CUBIC)
-    images.append(temp)
+    images[img] = temp
 del temp
 
 
@@ -124,8 +118,16 @@ imageKeyPoints, imageDescriptors = keyPoints(images, imagesNames)
 ##########################################################
 #Finding matchings for best 'm' matching images for each image
 ##########################################################
+goodMatchings={}
+for i in range(imageNos-1):
+    imgA = imagesNames[i]
+    imgB = imagesNames[i+1]
+    goodMatchings[(imgA,imgB)]= keyPointMatching(imageDescriptors, imgA, imgB)
 
+for ke in goodMatchings.keys():
+    findHomoRanSac(goodMatchings, ke)
 
+sys.exit()
 ##########################################################
 #Finding H for each of the pairs of images
 ##########################################################
