@@ -10,7 +10,7 @@ import numpy as np
 import sys
 
 path = './Images_Asgnmt3_1/I1/'
-imagesNames = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg']
+imagesNames = ['a.jpg', 'b.jpg'] #'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg']
 scale = (0.3, 0.3)
 images = [] # will have 3 channel color imgs
 imageNos = len(imagesNames)
@@ -44,7 +44,7 @@ def keyPointMatching(imgA, imgB): # add an option to send a list of strings, whe
     # print (imageDescriptors[0].shape)
     flann = cv.FlannBasedMatcher(index_params,search_params)
     matches = flann.knnMatch(imageDescriptors[1], imageDescriptors[0], k=2)
-    print (type(matches), matches[0],'type of matches[0][0]'+str(type(matches[0][0])) , matches[0][0], matches[0][0].trainIdx)
+    # print (type(matches), matches[0],'type of matches[0][0]'+str(type(matches[0][0])) , matches[0][0], matches[0][0].trainIdx)
     good = []
     for i, (m, n) in enumerate(matches):
         if m.distance < 0.7 * n.distance:
@@ -53,7 +53,7 @@ def keyPointMatching(imgA, imgB): # add an option to send a list of strings, whe
     #print(type(matches))
     # print('3 ', len(matches))
     matchesMask = [[0,0] for i in range(len(matches))]
-    print('matchesMask',len(matchesMask))
+    # print('matchesMask',len(matchesMask))
     draw_params = dict(matchColor=(0,255,0),
                       singlePointColor=(255,0,0),
                       matchesMask=matchesMask,
@@ -61,7 +61,7 @@ def keyPointMatching(imgA, imgB): # add an option to send a list of strings, whe
     img3 = cv.drawMatchesKnn(images[0], imageKeyPoints[0], images[1], imageKeyPoints[1], matches, None, **draw_params)
 
     cv.imshow("correspondences", img3)
-    print('length goog ', len(good))
+    # print('length goog ', len(good))
     cv.waitKey()
     if len(good) > 4:
         pointsCurrent = imageKeyPoints[1]
@@ -73,8 +73,8 @@ def keyPointMatching(imgA, imgB): # add an option to send a list of strings, whe
         matchedPointsPrev = np.float32(
             [pointsPrevious[i].pt for (i, __) in good]
         )
-        #print(len(matchedPointsCurrent))
-        H, s = cv.findHomography(matchedPointsCurrent, matchedPointsPrev, cv.RANSAC, 4)
+        # print(matchedPointsCurrent)
+        H, s = cv.findHomography(matchedPointsPrev, matchedPointsCurrent, cv.RANSAC, 4)
         print (H, len(s))
     return (H, s)
 def stitch(imgA, imgB, H, s):
@@ -89,10 +89,5 @@ r = 4 # number of points to find homography
 
 H, s = keyPointMatching(images[0], images[1])
 result = stitch(images[1], images[0], H, s)
-cv.imshow("correspondences", result)
-cv.waitKey()
-H, s = keyPointMatching(result, images[2])
-result = stitch(images[2], result, H, s)
-#result = cv.resize(result, (960, 540))
 cv.imshow("correspondences", result)
 cv.waitKey()
