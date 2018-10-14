@@ -7,6 +7,7 @@ https://kushalvyas.github.io/stitching.html
 import cv2 as cv
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
 
 # images is a list of numpy arrays, containing images
 def keyPoints(images, imagesNames): # add an option to send a list of strings, where keypoints return
@@ -109,7 +110,7 @@ def findHomoRanSac(n, r, list_kp, t, Tratio):
             # print('P output as:', P)
             H, Si = findH_Si(P, list_kp, t)
             # print ('si',Si)
-            return H / H[2,2]
+            return (H / H[2,2], Si)
 
     # print('Sisno',Sisno)
     Sisnoi = np.argmax(np.array(Sisno)) # taking the first index 
@@ -120,7 +121,7 @@ def findHomoRanSac(n, r, list_kp, t, Tratio):
     P = make_P(Si[0], Si[1])
     H, Si = findH_Si(P, list_kp, t)
     # print ('si',Si)
-    return H / H[2,2]
+    return (H / H[2,2], Si)
 
 def findH_Si(P, list_kp, t):
     # do svd on P get perlimns H
@@ -146,13 +147,10 @@ def findH_Si(P, list_kp, t):
             Si[1].append(fPt)
     return (H, Si)
 '''
-I assume that i recieve 2 lists, in which i have k points
+I assume that i recieve 2 lists
 '''
 def make_P(list_kp1, list_kp2):
     k = len(list_kp1)
-    # print('k value, should be 4 usually', k)
-    # print ('list_kp1', list_kp1)
-
     # making P matrix
     P = np.zeros((2*k, 9))
     for i in range(0,2*k,2):
@@ -160,21 +158,53 @@ def make_P(list_kp1, list_kp2):
         x_ = list_kp2[int(i/2)][0]
         y = list_kp1[int(i/2)][1]
         y_ = list_kp2[int(i/2)][1]
-
         P[i+0,:] = [x, y, 1, 0, 0, 0, -x*x_, -y*x_, -x_]
         P[i+1,:] = [0, 0, 0, x, y, 1, -x*y_, -y*y_, -y_]
     return P
-def stitch(imgA, imgB, H, s, ratio=0.75, reporjThrest=4.0):
-    result = cv.warpPerspective(imgA, H, (imgA.shape[1] + imgB.shape[1], imgA.shape[0]))
-    result[0:imgB.shape[0], 0:imgB.shape[1]] = imgB
-    return result
+
+'''
+Makes a canvas for the panorama
+'''
+def createCanvas(img, factor):
+    height, width, chnl = img.shape
+    return np.zeros((height*factor, width*factor, chnl), dtype=np.uint8)
+
+'''
+brief:
+    Draws an image on canvas after transformation with H
+params:
+    canvas- global canvas we want to draw on.
+    img- the image that needs to be transformed
+    H- Homography matrix
+    offset- The offset list [x, y]
+    fill- the number of pixels surrounding need to be filled too
+'''
+def drawOnCanvas(canvas, img, H, offset, fill):
+    height, width, chnl = img.shape
+    for i in range(height):
+        for j in range(width):
+            vctr = np.array([[i,j,1]]).T #col vctr
+            vctr2 = np.matmul(H, vctr)
+            vctr2 /= vctr2[2,0] #last coordinate to 1
+            pt = vctr2[:2,:] #getting rid of last coordinate
+            pt += np.array(offset).T
+
+            #drawing with interpolation
+            y = int(pt[0,0])
+            x = int(pt[1,0])
+            canvas[y:y+fill, x:x+fill] = np.full((fill, fill, 3), img[i,j], dtype=np.uint8)
+            # if i == 0 and j == 0:
+            #     print (np.full((fill, fill, 3), img[i,j]))
+            #     print (np.full((fill, fill, 3), img[i,j]).shape)
+    # print('returned')
+    return 
 
 ##########################################################
 #Reading files
 ##########################################################
 path = './Images_Asgnmt3_1/I1/'
 imagesNames = ['a.jpg', 'b.jpg', 'c.jpg']#, 'd.jpg', 'e.jpg', 'f.jpg']
-scale = (0.3, 0.3)
+scale = (0.1, 0.1)
 images = {} # will have 3 channel color imgs
 imageNos = len(imagesNames)
 m = 3
@@ -210,34 +240,47 @@ for i in range(imageNos-1):
 ##########################################################
 n = 1000 # iterations
 r = 4 # no of point to calc homo
-t = 10 # pixel threashold
-Tratio = 0.8 # majority threashold
+t = 4 # pixel threashold
+Tratio = 0.95 # majority threashold
 
 # currently for single
-for i in range(1):
+Hs = []
+Ss = []
+for i in range(imageNos-1):
     imgA = imagesNames[i]
     imgB = imagesNames[i+1]
     list_kp = goodMatchings[(imgA, imgB)]
-    H = findHomoRanSac(n, r, list_kp, t, Tratio)
-    print (H)
-    sys.exit()
-
+    H, S = findHomoRanSac(n, r, list_kp, t, Tratio)
+    Hs.append(H)
+    Ss.append(S)
 
 ##########################################################
 #Wrapping the images together using H
 ##########################################################
+factor = imageNos+1
+offset = [[400,400]]
+canvas = createCanvas(images[imagesNames[0]], factor)
+print('image.shape', images[imagesNames[0]].shape)
+print('canvas.shape', canvas.shape)
 
+# middle term is identity mat
+Hss = {int(imageNos/2): np.eye(3)}
 
-##########################################################
-#Finding matchings for best 'm' matching images for each image
-##########################################################
+#forward terms filled
+for i in range(int(imageNos/2), imageNos-1):
+    Hss[i+1] = np.matmul(Hs[i], Hss[i])
+#backward terms filled
+for i in range(int(imageNos/2)-1, -1, -1):
+    Hss[i] = np.matmul(np.linalg.inv(Hs[i]), Hss[i+1])
 
-H, s = keyPointMatching(images[0], images[1])
-result = stitch(images[1], images[0], H, s)
-cv.imshow("correspondences", result)
-cv.waitKey()
-H, s = keyPointMatching(result, images[2])
-result = stitch(images[2], result, H, s)
-#result = cv.resize(result, (960, 540))
-cv.imshow("correspondences", result)
-cv.waitKey()
+# print ('Hss0', Hss[2])
+# print ('Hsinv', Hs[1])
+
+# drawing
+for i in range(0, imageNos):
+    drawOnCanvas(canvas, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1)
+
+# print (canvas)
+plt.imshow(canvas)
+plt.show()
+sys.exit()
