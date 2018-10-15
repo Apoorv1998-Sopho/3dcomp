@@ -289,8 +289,8 @@ for i in range(int(imageNos/2)-1, -1, -1):
     Hss[i] = np.matmul(Hs[i], Hss[i+1])
 print('done realtive homographies')
 
-print ('Hss', Hss)
-print ('Hs', Hs)
+# print ('Hss', Hss)
+# print ('Hs', Hs)
 
 # drawing
 for i in range(0, imageNos):
@@ -312,7 +312,7 @@ out = canvas[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
           top_left[1]:bottom_right[1]+1]  # inclusive
 print('done stripping')
 
-cv.imwrite("stitchedin.jpg", out)
+cv.imwrite("./result/stitched.jpg", out)
 sys.exit()
 
 '''
