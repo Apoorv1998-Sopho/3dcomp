@@ -1,11 +1,17 @@
+import cv2 as cv
+import numpy as np
+import sys
+import matplotlib.pyplot as plt
+from helper import *
 ##########################################################
 #Reading files
 ##########################################################
-path = './RGBD dataset/000001524/'
+path = './RGBD dataset/'
 imagesNames = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg']#, 'e.jpg', 'f.jpg']
 depthNames = ['d'+img for img in imagesNames]
-scale = (0.2, 0.2)
+scale = (1, 1)
 images = {} # will have 3 channel color imgs
+dimages = {} # will have 1 chnl imgs
 imageNos = len(imagesNames)
 m = 3
 k = 4
@@ -19,13 +25,16 @@ for img in imagesNames:
     temp = cv.resize(temp, None, fx=scale[0], 
                      fy=scale[1], interpolation=cv.INTER_CUBIC)
     images[img] = temp
-for img in depthNames:
-    print(path + img)
-    temp = cv.imread(path + img)
+for dimg in depthNames:
+    print(path + dimg)
+    temp = cv.imread(path + dimg)
     temp = cv.resize(temp, None, fx=scale[0], 
-    	  			 fy=scale[1], interpolation=cv.INTER_CUBIC)
-    dimages[img] = temp
+          	         fy=scale[1], interpolation=cv.INTER_CUBIC)
+    temp = cv.cvtColor(temp, cv.COLOR_BGR2GRAY)
+    dimages[dimg] = temp
 del temp
+# print('images.shape',images[imagesNames[0]].shape)
+# print('dimages.shape',dimages[depthNames[0]].shape)
 
 ##########################################################
 #Finding KeyPoints and Discriptors
@@ -43,7 +52,9 @@ goodMatchings={}
 for i in range(imageNos-1):
     imgA = imagesNames[i]
     imgB = imagesNames[i+1]
-    goodMatchings[(imgA,imgB)]= keyPointMatching(imageKeyPoints, imageDescriptors, imgA, imgB)
+    goodMatchings[(imgA,imgB)]= keyPointMatching(images, 
+                        imageKeyPoints, imageDescriptors,
+                        imgA, imgB)
 print('done keymatches')
 
 ##########################################################
@@ -53,6 +64,23 @@ print('done keymatches')
 Quantized is a dict
 Quantized['da.jpg']=[imgdpt1, imgdpt2, imgdpt3...]
 '''
-def Quantize(depthNames):
+def Quantize(dimages, depthNames, dlevels=10):
+    # find the max depth
+    for i in range(len(dimages)):
+        if i == 0:
+            max_depth = np.max(dimages[depthNames[i]])
+        max_depth = max(max_depth, np.max(dimages[depthNames[i]]))
+    # print ('max_depth',max_depth) = 255
+    depth_quantum = int(max_depth/dlevels)
+    print(depth_quantum)
+    for i in range(len(dimages)):
+        dimages[depthNames[i]] = (dimages[depthNames[i]]/dlevels).astype(np.uint8) #only dlevels
+        dimages[depthNames[i]] *= depth_quantum
+    return dimages
 
-Quantized = Quantize(depthNames)
+dimages = Quantize(dimages,depthNames)
+print(dimages[depthNames[0]])
+# cv.imshow("Quantized image", dimages[depthNames[0]])
+# cv.waitKey(0)
+
+sys.exit()
