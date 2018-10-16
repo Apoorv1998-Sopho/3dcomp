@@ -21,7 +21,7 @@ def keyPoints(images, imagesNames): # add an option to send a list of strings, w
     # compare each image with every other
     return (imageKeyPoints, imageDescriptors)
 
-def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB, dirr):
+def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB, dirr, lowsR):
     FLANN_INDEX_KDTREE = 0
     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
     search_params = dict(checks=50)   # or pass empty dictionary
@@ -34,20 +34,22 @@ def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB, dirr)
     #using lows ratio test
     good = [[],[]]
     for i, (m, n) in enumerate(matches):
-        if m.distance < 0.8 * n.distance: # if closest match is ratio 
+        if m.distance < lowsR * n.distance: # if closest match is ratio 
                                           # closer than the second closest one,
                                           # then the match is good
             good[0].append(imageKeyPoints[imgA][m.queryIdx].pt)
             good[1].append(imageKeyPoints[imgB][m.trainIdx].pt)
 
-    #print(type(matches))
-    matchesMask = [[0,0] for i in range(len(matches))]
-    draw_params = dict(matchColor=(0,255,0),
-                      singlePointColor=(255,0,0),
-                      matchesMask=matchesMask,
-                      flags=0)
-    img3 = cv.drawMatchesKnn(images[imgA], imageKeyPoints[imgA], images[imgB],
-                             imageKeyPoints[imgB], matches, None, **draw_params)
+    # #print(type(matches))
+    # matchesMask = [[0,0] for i in range(len(matches))]
+    # draw_params = dict(matchColor=(0,255,0),
+    #                   singlePointColor=(255,0,0),
+    #                   matchesMask=matchesMask,
+    #                   flags=0)
+    # img3 = cv.drawMatchesKnn(images[imgA], imageKeyPoints[imgA], images[imgB],
+    #                          imageKeyPoints[imgB], matches, None, **draw_params)
+    # cv.imshow("correspondences", img3)
+    # cv.waitKey()
     return good
 
 '''
@@ -190,13 +192,13 @@ def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
                 c = weight * np.full((fill, fill, 3), img[i,j])
 
             else: # weightDic == None
-                c = np.full((fill, fill, 3), img[i,j])
+                c = np.full((fill, fill, 3), img[i,j])# to reduce tearing pixel converted to a blob of fillxfill
 
             try:
                 if weightDic != None:
-                    canvas[y:y+fill, x:x+fill] += c.astype(np.uint16)# to reduce tearing
+                    canvas[y:y+fill, x:x+fill] += c.astype(np.uint16)
                 else:
-                    canvas[y:y+fill, x:x+fill] = c.astype(np.uint16)# to reduce tearing
+                    canvas[y:y+fill, x:x+fill] = c.astype(np.uint16)
                 # adding weight as weightDic[col, row] if weightDic provided
                 if weightDic != None:
                     for l in range(fill):
@@ -218,6 +220,10 @@ def divideWeight(canvas, weightDic):
 # PART 2
 #########################################################################################
 
+'''
+Quantized is a dict
+Quantized['da.jpg']=[imgdpt1, imgdpt2, imgdpt3...]
+'''
 def Quantize(dimages, depthNames, dlevels=5):
     # find the max depth
     for i in range(len(dimages)):
@@ -226,8 +232,8 @@ def Quantize(dimages, depthNames, dlevels=5):
         max_depth = max(max_depth, np.max(dimages[depthNames[i]]))
     # print ('max_depth',max_depth) = 255
     depth_quantum = int(max_depth/dlevels)
-    print(depth_quantum)
+    # print(depth_quantum)
     for i in range(len(dimages)):
         dimages[depthNames[i]] = (dimages[depthNames[i]]/dlevels).astype(np.uint8) #only dlevels
         dimages[depthNames[i]] *= depth_quantum
-    return dimages
+    return dimages, depth_quantum

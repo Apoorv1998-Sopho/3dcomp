@@ -46,6 +46,7 @@ for pathI in paths:
     ##########################################################
     print('finding keymatches')
     dirr = './result/Part1'+pathI
+    lowsR = 0.85 # low's ratio
     goodMatchings={}
     for i in range(imageNos-1):
         imgA = imagesNames[i]

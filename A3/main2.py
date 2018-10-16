@@ -7,7 +7,7 @@ from helper import *
 #Reading files
 ##########################################################
 path = './RGBD dataset/'
-imagesNames = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg']#, 'e.jpg', 'f.jpg']
+imagesNames = ['a.jpg', 'b.jpg']
 depthNames = ['d'+img for img in imagesNames]
 scale = (1, 1)
 images = {} # will have 3 channel color imgs
@@ -49,40 +49,59 @@ print('done keypoints and discriptors')
 ##########################################################
 print('finding keymatches')
 dirr = './result/Part2'
-goodMatchings={}
-for i in range(imageNos-1):
-    imgA = imagesNames[i]
-    imgB = imagesNames[i+1]
-    goodMatchings[(imgA,imgB)]= keyPointMatching(images, 
-                        imageKeyPoints, imageDescriptors,
-                        imgA, imgB, dirr)
+imgA = imagesNames[0]
+imgB = imagesNames[1]
+lowsR = 111000 # low's ratio, taking big, cz not many matchings
+keyPointMatchings = keyPointMatching(images, imageKeyPoints,
+                        imageDescriptors,
+                        imgA, imgB, dirr, lowsR)
 print('done keymatches')
 
 ##########################################################
 #Quantize the depth image
 ##########################################################
-'''
-Quantized is a dict
-Quantized['da.jpg']=[imgdpt1, imgdpt2, imgdpt3...]
-'''
-def Quantize(dimages, depthNames, dlevels=5):
-    # find the max depth
-    for i in range(len(dimages)):
-        if i == 0:
-            max_depth = np.max(dimages[depthNames[i]])
-        max_depth = max(max_depth, np.max(dimages[depthNames[i]]))
-    # print ('max_depth',max_depth) = 255
-    depth_quantum = int(max_depth/dlevels)
-    print(depth_quantum)
-    for i in range(len(dimages)):
-        dimages[depthNames[i]] = (dimages[depthNames[i]]/dlevels).astype(np.uint8) #only dlevels
-        dimages[depthNames[i]] *= depth_quantum
-    return dimages
-
-dimages = Quantize(dimages,depthNames)
+dlevels = 10
+dimages, depth_quantum = Quantize(dimages,depthNames, dlevels)
 # print(dimages[depthNames[0]])
-# cv.imshow("Quantized image", dimages[depthNames[0]])
-# cv.waitKey(0)
+cv.imshow("Quantized image", dimages[depthNames[0]])
+cv.waitKey(0)
+
+'''
+Returns a dlevel length dictionary with keys as depthlevel
+Works to divide the keypoints in the first image of dimages
+'''
+# print(keyPointMatchings[0][0])
+# sys.exit()
+def keypt_divide_depth(dimages, depthNames, keyPointMatchings, dlevels, depth_quantum):
+    dname = depthNames[0]
+    keyPtsDivided = {}
+    length = len(keyPointMatchings)
+    print ('# of KeyPoints matchings', length)
+    for i in range(length):
+        x,y = keyPointMatchings[0][i] # selecting all keypoints in first img
+        xi = int(x)
+        yi = int(y)
+        depthVal=dimages[dname][yi,xi]
+        dlevel = int(depthVal/depth_quantum)
+        # print('value of depth:', depthVal)
+        # print('dlevel of coordinate:', dlevel)
+        
+        try:
+            keyPtsDivided[dlevel].append([keyPointMatchings[0][i], keyPointMatchings[1][i]])
+        except:
+            keyPtsDivided[dlevel] = [keyPointMatchings[0][i], keyPointMatchings[1][i]]
+    return keyPtsDivided
+
+
+keyPtsDivided = keypt_divide_depth(dimages, depthNames, keyPointMatchings, dlevels, depth_quantum)
+print(keyPtsDivided)
+sys.exit()
+for i in range(dlevels):
+    pass
+
+for i in range(dlevels):
+    dname = depthNames[i]
+    dimg = dimages[dname]
 
 
 
