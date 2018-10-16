@@ -53,7 +53,7 @@ for pathI in paths:
         imgB = imagesNames[i+1]
         goodMatchings[(imgA,imgB)]= keyPointMatching(images, 
                                   imageKeyPoints, imageDescriptors, 
-                                  imgA, imgB, dirr)
+                                  imgA, imgB, dirr, lowsR)
     print('done keymatches')
 
     ##########################################################
@@ -92,57 +92,64 @@ for pathI in paths:
         Hss[i] = np.matmul(Hs[i], Hss[i+1])
     print('done realtive homographies')
 
-    # create canvas
-    factor = [int(imageNos*3), int(imageNos*5)] # dy,dx
-    offset = [[3000,1000]] # x,y
-    canvas2 = createCanvas(images[imagesNames[0]], factor)
+    if not built_in:
+        # create canvas
+        factor = [int(imageNos*3), int(imageNos*5)] # dy,dx
+        offset = [[3000,1000]] # x,y
+        canvas2 = createCanvas(images[imagesNames[0]], factor)
 
-    #drawing unblended
-    print('drawing ', end= '')
-    for i in range(0, imageNos):
-        print(imagesNames[i], end=' ')
-        drawOnCanvas(canvas2, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1, weightDic=None)
-    canvas2 = canvas2.astype(np.uint8)
+        #drawing unblended
+        print('drawing ', end= '')
+        for i in range(0, imageNos):
+            print(imagesNames[i], end=' ')
+            drawOnCanvas(canvas2, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1, weightDic=None)
+        canvas2 = canvas2.astype(np.uint8)
 
-    # stripping
-    print ('stripping')
-    true_points = np.argwhere(canvas2)
-    top_left = true_points.min(axis=0)
-    bottom_right = true_points.max(axis=0)
-    out = canvas2[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
-                 top_left[1]:bottom_right[1]+1]  # inclusive
-    print('done stripping')
+        # stripping
+        print ('stripping')
+        true_points = np.argwhere(canvas2)
+        top_left = true_points.min(axis=0)
+        bottom_right = true_points.max(axis=0)
+        out = canvas2[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
+                     top_left[1]:bottom_right[1]+1]  # inclusive
+        print('done stripping')
 
-    # spitting
-    cv.imwrite("./result/"+pathI+"unblended.jpg", out)
+        # spitting
+        cv.imwrite("./result/"+pathI+"unblended.jpg", out)
 
-    # create canvas
-    factor = [int(imageNos*3), int(imageNos*5)] # dy,dx
-    offset = [[3000,1000]] # x,y
-    canvas = createCanvas(images[imagesNames[0]], factor)
+        # create canvas
+        factor = [int(imageNos*3), int(imageNos*5)] # dy,dx
+        offset = [[3000,1000]] # x,y
+        canvas = createCanvas(images[imagesNames[0]], factor)
 
-    print('stiching blended')
-    #drawing blended
-    weightDic = {}
-    print('drawing ', end= '')
-    for i in range(0, imageNos):
-        print(imagesNames[i], end=' ')
-        drawOnCanvas(canvas, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1, weightDic)
+        print('stiching blended')
+        #drawing blended
+        weightDic = {}
+        print('drawing ', end= '')
+        for i in range(0, imageNos):
+            print(imagesNames[i], end=' ')
+            drawOnCanvas(canvas, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1, weightDic)
 
-    # divide by weights at each pixel
-    divideWeight(canvas, weightDic)
-    canvas = canvas.astype(np.uint8)
+        # divide by weights at each pixel
+        divideWeight(canvas, weightDic)
+        canvas = canvas.astype(np.uint8)
 
-    # stripping
-    print ('stripping')
-    true_points = np.argwhere(canvas)
-    top_left = true_points.min(axis=0)
-    bottom_right = true_points.max(axis=0)
-    out = canvas[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
-                 top_left[1]:bottom_right[1]+1]  # inclusive
-    print('done stripping')
+        # stripping
+        print ('stripping')
+        true_points = np.argwhere(canvas)
+        top_left = true_points.min(axis=0)
+        bottom_right = true_points.max(axis=0)
+        out = canvas[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
+                     top_left[1]:bottom_right[1]+1]  # inclusive
+        print('done stripping')
 
-    # spitting
-    cv.imwrite("./result/"+pathI+"blended.jpg", out)
+        # spitting
+        cv.imwrite("./result/"+pathI+"blended.jpg", out)
+
+
+    else: # built_in
+        pass
+        
+
 print('check "./result"')
 sys.exit()

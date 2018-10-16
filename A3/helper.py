@@ -166,9 +166,9 @@ params:
     H- Homography matrix
     offset- The offset list [x, y]
     fill- the number of pixels surrounding need to be filled too
-    @param weightDic 
+    @param blackPixelPrint when we have a black pixel should we print it or not
 '''
-def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
+def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None, blackPixelPrint=True):
     height, width, chnl = img.shape
     for i in range(height):
         for j in range(width):
@@ -191,7 +191,6 @@ def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
             # if weightDic not provided don't do blending
             if weightDic != None: # if we have been provided weightDic
                 c = weight * np.full((fill, fill, 3), img[i,j])
-
             else: # weightDic == None
                 c = np.full((fill, fill, 3), img[i,j])# to reduce tearing pixel converted to a blob of fillxfill
 
@@ -199,7 +198,11 @@ def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
                 if weightDic != None:
                     canvas[y:y+fill, x:x+fill] += c.astype(np.uint16)
                 else:
-                    canvas[y:y+fill, x:x+fill] = c.astype(np.uint16)
+                    if blackPixelPrint: # should i print black pixel (used in part2)
+                        canvas[y:y+fill, x:x+fill] = c.astype(np.uint16)
+                    else:
+                        if (np.argwhere(img[i,j]).shape[0] != 0):# if not black, print
+                            canvas[y:y+fill, x:x+fill] = c.astype(np.uint16)
                 # adding weight as weightDic[col, row] if weightDic provided
                 if weightDic != None:
                     for l in range(fill):
@@ -217,6 +220,14 @@ def divideWeight(canvas, weightDic):
         x, y = key
         weight = weightDic[(x, y)]
         canvas[y, x] = (canvas[y, x]/weight).astype(np.uint16)
+
+def strip(canvas2):
+    true_points = np.argwhere(canvas2)
+    top_left = true_points.min(axis=0)
+    bottom_right = true_points.max(axis=0)
+    out = canvas2[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
+                 top_left[1]:bottom_right[1]+1]  # inclusive
+    return out
 
 # PART 2
 #########################################################################################
@@ -254,7 +265,7 @@ def keypt_divide_depth(dimages, depthNames, keyPointMatchings, dlevels, depth_qu
         x,y = keyPointMatchings[0][i] # selecting all keypoints in first img
         xi = int(x)
         yi = int(y)
-        depthVal=dimages[dname][yi,xi]
+        depthVal=dimages[dname][yi,xi][0] # selecting first chnl
         dlevel = int(depthVal/depth_quantum)
         # print('value of depth:', depthVal)
         # print('dlevel of coordinate:', dlevel)
