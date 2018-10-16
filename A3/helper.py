@@ -21,7 +21,7 @@ def keyPoints(images, imagesNames): # add an option to send a list of strings, w
     # compare each image with every other
     return (imageKeyPoints, imageDescriptors)
 
-def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB):
+def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB, dirr):
     FLANN_INDEX_KDTREE = 0
     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
     search_params = dict(checks=50)   # or pass empty dictionary
@@ -54,7 +54,6 @@ def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB):
 
     # cv.imshow("correspondences", img3)
     # writing to results folder
-    dirr = './result/'
     file = dirr + "keypoints_"+imgA+'_'+imgB
     cv.imwrite(file, img3)
     # print('length of all matches ', len(matches))
@@ -165,7 +164,7 @@ Makes a canvas for the panorama
 '''
 def createCanvas(img, factor):
     height, width, chnl = img.shape
-    return np.zeros((height*factor[0], width*factor[1], chnl), dtype=np.uint8)
+    return np.zeros((height*factor[0], width*factor[1], chnl), dtype=np.uint16)
 
 '''
 brief:
@@ -176,11 +175,19 @@ params:
     H- Homography matrix
     offset- The offset list [x, y]
     fill- the number of pixels surrounding need to be filled too
+    @param weightDic 
 '''
-def drawOnCanvas(canvas, img, H, offset, fill):
+def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
     height, width, chnl = img.shape
     for i in range(height):
         for j in range(width):
+            # finding the weight not exactly zero at edges
+            if j > int(width/2):
+                weight = (width - j+1) / ((float(width)/2))
+            else:
+                weight = (j+1)/((float(width)/2))
+
+            # print (weight)
             vctr = np.array([[j,i,1]]).T #col vctr
             vctr2 = np.matmul(H, vctr)
             vctr2 /= vctr2[2,0] #last coordinate to 1
@@ -190,12 +197,46 @@ def drawOnCanvas(canvas, img, H, offset, fill):
             #drawing with interpolation
             x = int(pt[0,0])
             y = int(pt[1,0])
+            # if weightDic not provided don't do blending
+            if weightDic != None: # if we have been provided weightDic
+                c = weight * np.full((fill, fill, 3), img[i,j])
+                # print ('i,j',i,j)
+
+            else: # we have to do blending
+                c = np.full((fill, fill, 3), img[i,j])
+
             try:
-                canvas[y:y+fill, x:x+fill] = np.full((fill, fill, 3), img[i,j], dtype=np.uint8)
-            except:
+                canvas[y:y+fill, x:x+fill] = c.astype(np.uint16)# to reduce tearing
+                # adding weight as weightDic[col, row] if weightDic provided
+                if weightDic != None: # if we have been provided weightDic (not None)
+                    # print(weight)
+                    for l in range(fill):
+                        for k in range(fill):
+                            # print('x,ys',(x+l,y+k))
+                            try:
+                                weightDic[(x+l,y+k)] += weight
+                            except KeyError:
+                                weightDic[(x+l,y+k)] = weight
+                    # print(weightDic)
+                    # sys.exit()
+            except ValueError:
                 print('not able to print, x,y', x, y)
             # if i == 0 and j == 0:
             #     print (np.full((fill, fill, 3), img[i,j]))
             #     print (np.full((fill, fill, 3), img[i,j]).shape)
     # print('returned')
     return
+
+def divideWeight(canvas, weightDic):
+    for key in weightDic.keys():
+        x, y = key
+        weight = weightDic[(x, y)]
+        if (x==0 and y==0):
+            print ('x,y',x,y)
+            print('w', weight)
+            print('prev', canvas[y, x])
+        canvas[y, x] /= weight
+        if (x==0 and y==0):
+            print('post', canvas[y, x])
+            sys.exit()
+
