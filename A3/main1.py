@@ -13,7 +13,7 @@ from helper import *
 #Reading files
 ##########################################################
 built_in = False # to switch between built-in or custom
-paths = ['I1']#, 'I4', 'I5']
+paths = ['I1', 'I4', 'I5']
 for pathI in paths:
     path = './Images_Asgnmt3_1/' + pathI + '/'
     imagesNames = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg']#, 'e.jpg', 'f.jpg']
@@ -94,8 +94,34 @@ for pathI in paths:
     # create canvas
     factor = [int(imageNos*3), int(imageNos*5)] # dy,dx
     offset = [[3000,1000]] # x,y
+    canvas2 = createCanvas(images[imagesNames[0]], factor)
+
+    #drawing unblended
+    print('stiching unblended')
+    for i in range(0, imageNos):
+        print('drawing', imagesNames[i])
+        drawOnCanvas(canvas2, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1, weightDic=None)
+        print('drawn', imagesNames[i])
+    canvas2 = canvas2.astype(np.uint8)
+
+    # stripping
+    print ('stripping')
+    true_points = np.argwhere(canvas2)
+    top_left = true_points.min(axis=0)
+    bottom_right = true_points.max(axis=0)
+    out = canvas2[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
+                 top_left[1]:bottom_right[1]+1]  # inclusive
+    print('done stripping')
+
+    # spitting
+    cv.imwrite("./result/"+pathI+"unblended.jpg", out)
+
+    # create canvas
+    factor = [int(imageNos*3), int(imageNos*5)] # dy,dx
+    offset = [[3000,1000]] # x,y
     canvas = createCanvas(images[imagesNames[0]], factor)
 
+    print('stiching blended')
     #drawing blended
     weightDic = {}
     for i in range(0, imageNos):

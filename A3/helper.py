@@ -54,8 +54,8 @@ def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB, dirr)
 
     # cv.imshow("correspondences", img3)
     # writing to results folder
-    file = dirr + "keypoints_"+imgA+'_'+imgB
-    cv.imwrite(file, img3)
+    # file = dirr + "keypoints_"+imgA+'_'+imgB
+    # cv.imwrite(file, img3)
     # print('length of all matches ', len(matches))
     # print('length good matches ', len(good))
     # cv.waitKey()
@@ -205,7 +205,10 @@ def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
                 c = np.full((fill, fill, 3), img[i,j])
 
             try:
-                canvas[y:y+fill, x:x+fill] += c.astype(np.uint16)# to reduce tearing
+                if weightDic != None:
+                    canvas[y:y+fill, x:x+fill] += c.astype(np.uint16)# to reduce tearing
+                else:
+                    canvas[y:y+fill, x:x+fill] = c.astype(np.uint16)# to reduce tearing
                 # adding weight as weightDic[col, row] if weightDic provided
                 if weightDic != None:
                     for l in range(fill):
