@@ -6,7 +6,7 @@ from helper import *
 ##########################################################
 #Reading files
 ##########################################################
-pathI = 'C'
+pathI = 'A'
 path = './RGBD dataset/' + pathI + '/'
 imagesNames = ['a.jpg', 'b.jpg']
 depthNames = ['d'+img for img in imagesNames]
@@ -51,7 +51,7 @@ print('finding keymatches')
 dirr = './result/Part2'
 imgA = imagesNames[0]
 imgB = imagesNames[1]
-lowsR = .75 # low's ratio, taking big, cz not many matchings
+lowsR = .95 # low's ratio, taking big, cz not many matchings
 keyPointMatchings = keyPointMatching(images, imageKeyPoints,
                         imageDescriptors,
                         imgA, imgB, dirr, lowsR)
@@ -73,7 +73,7 @@ keyPtsDivided = keypt_divide_depth(dimages, depthNames, keyPointMatchings, dleve
 ##########################################################
 #Find HomoGraphies
 ##########################################################
-n = 3000
+n = 1000
 r = 4
 t = 2
 Tratio = 0.95
@@ -84,10 +84,25 @@ Hs = {}
 for i in range(dlevels):
     # print(type(keyPtsDivided[i]))
     list_kp = keyPtsDivided[i]
-    H, S = findHomoRanSac(n, r, list_kp, t, Tratio)
+    # print(list_kp[0])
+    try:
+        H, S = findHomoRanSac(n, r, list_kp, t, Tratio)
+    except ValueError: # when not enough points
+        H = None
     Hs[i] = H
 print('Done HomoGraphies')
 print('HomoGraphies:', Hs)
+
+# interpolating Those H which couldn't be calculated
+for i in range(dlevels):
+    if Hs[i].tolist() == None:
+        try:
+            Hs[i] = (Hs[i-1] + Hs[i+1])/2
+        except KeyError:
+            try:
+                Hs[i] = Hs[i-1]
+            except KeyError:
+                Hs[i] = Hs[i+1]
 
 ##########################################################
 #Warp
@@ -125,10 +140,8 @@ print('done regions')
 # c = np.array(c)
 
 # printing ref img
-drawOnCanvas(canvas2, images[imagesNames[1]], np.eye(3), offset, fill=1, weightDic=None)
-
-#drawing unblended
 print('drawing ', end= '')
+drawOnCanvas(canvas2, images[imagesNames[1]], np.eye(3), offset, fill=1, weightDic=None)
 for i in range(dlevels):
     print('dlevel:', i, end=' ')
     drawOnCanvas(canvas2, regions[i], Hs[i], offset, 

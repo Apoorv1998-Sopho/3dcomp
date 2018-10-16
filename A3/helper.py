@@ -270,10 +270,10 @@ def keypt_divide_depth(dimages, depthNames, keyPointMatchings, dlevels, depth_qu
         dlevel = int(depthVal/depth_quantum)
         # print('value of depth:', depthVal)
         # print('dlevel of coordinate:', dlevel)
-        
         try:
-            keyPtsDivided[dlevel].append((keyPointMatchings[0][i], keyPointMatchings[1][i]))
+            keyPtsDivided[dlevel][0].append(keyPointMatchings[0][i])
+            keyPtsDivided[dlevel][1].append(keyPointMatchings[1][i])
         except:
-            keyPtsDivided[dlevel] = [(keyPointMatchings[0][i], keyPointMatchings[1][i])]
+            keyPtsDivided[dlevel] = [[],[]]
     return keyPtsDivided
 
