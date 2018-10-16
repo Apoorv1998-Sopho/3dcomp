@@ -48,13 +48,14 @@ print('done keypoints and discriptors')
 #Finding matchings for best 'm' matching images for each image
 ##########################################################
 print('finding keymatches')
+dirr = './result/Part2'
 goodMatchings={}
 for i in range(imageNos-1):
     imgA = imagesNames[i]
     imgB = imagesNames[i+1]
     goodMatchings[(imgA,imgB)]= keyPointMatching(images, 
                         imageKeyPoints, imageDescriptors,
-                        imgA, imgB)
+                        imgA, imgB, dirr)
 print('done keymatches')
 
 ##########################################################
@@ -64,7 +65,7 @@ print('done keymatches')
 Quantized is a dict
 Quantized['da.jpg']=[imgdpt1, imgdpt2, imgdpt3...]
 '''
-def Quantize(dimages, depthNames, dlevels=10):
+def Quantize(dimages, depthNames, dlevels=5):
     # find the max depth
     for i in range(len(dimages)):
         if i == 0:
@@ -79,8 +80,10 @@ def Quantize(dimages, depthNames, dlevels=10):
     return dimages
 
 dimages = Quantize(dimages,depthNames)
-print(dimages[depthNames[0]])
+# print(dimages[depthNames[0]])
 # cv.imshow("Quantized image", dimages[depthNames[0]])
 # cv.waitKey(0)
+
+
 
 sys.exit()

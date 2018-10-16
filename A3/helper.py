@@ -206,7 +206,7 @@ def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
                 c = np.full((fill, fill, 3), img[i,j])
 
             try:
-                canvas[y:y+fill, x:x+fill] = c.astype(np.uint16)# to reduce tearing
+                canvas[y:y+fill, x:x+fill] += c.astype(np.uint16)# to reduce tearing
                 # adding weight as weightDic[col, row] if weightDic provided
                 if weightDic != None: # if we have been provided weightDic (not None)
                     # print(weight)
@@ -231,12 +231,4 @@ def divideWeight(canvas, weightDic):
     for key in weightDic.keys():
         x, y = key
         weight = weightDic[(x, y)]
-        if (x==0 and y==0):
-            print ('x,y',x,y)
-            print('w', weight)
-            print('prev', canvas[y, x])
-        canvas[y, x] /= weight
-        if (x==0 and y==0):
-            print('post', canvas[y, x])
-            sys.exit()
-
+        canvas[y, x] = (canvas[y, x]/weight).astype(np.uint16)

@@ -110,7 +110,7 @@ for pathI in paths:
         print('drawn', imagesNames[i])
 
     # divide by weights at each pixel
-    # divideWeight(canvas, weightDic)
+    divideWeight(canvas, weightDic)
     canvas = canvas.astype(np.uint8)
 
 
