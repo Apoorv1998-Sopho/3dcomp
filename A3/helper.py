@@ -27,9 +27,6 @@ def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB, dirr)
     search_params = dict(checks=50)   # or pass empty dictionary
 
     flann = cv.FlannBasedMatcher(index_params,search_params)
-    # print('1 ', len(imageDescriptors[0]))
-    # print('2 ', len(imageDescriptors[1]))
-    # print (type(imageDescriptors[imgA]))
     matches = flann.knnMatch(imageDescriptors[imgA],
                              imageDescriptors[imgB], k=2)
                              # matches 2 nearest neigbours
@@ -51,15 +48,6 @@ def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB, dirr)
                       flags=0)
     img3 = cv.drawMatchesKnn(images[imgA], imageKeyPoints[imgA], images[imgB],
                              imageKeyPoints[imgB], matches, None, **draw_params)
-
-    # cv.imshow("correspondences", img3)
-    # writing to results folder
-    # file = dirr + "keypoints_"+imgA+'_'+imgB
-    # cv.imwrite(file, img3)
-    # print('length of all matches ', len(matches))
-    # print('length good matches ', len(good))
-    # cv.waitKey()
-    # print (len(good[0])) # length of good keyPointS
     return good
 
 '''
@@ -226,3 +214,20 @@ def divideWeight(canvas, weightDic):
         x, y = key
         weight = weightDic[(x, y)]
         canvas[y, x] = (canvas[y, x]/weight).astype(np.uint16)
+
+# PART 2
+#########################################################################################
+
+def Quantize(dimages, depthNames, dlevels=5):
+    # find the max depth
+    for i in range(len(dimages)):
+        if i == 0:
+            max_depth = np.max(dimages[depthNames[i]])
+        max_depth = max(max_depth, np.max(dimages[depthNames[i]]))
+    # print ('max_depth',max_depth) = 255
+    depth_quantum = int(max_depth/dlevels)
+    print(depth_quantum)
+    for i in range(len(dimages)):
+        dimages[depthNames[i]] = (dimages[depthNames[i]]/dlevels).astype(np.uint8) #only dlevels
+        dimages[depthNames[i]] *= depth_quantum
+    return dimages
