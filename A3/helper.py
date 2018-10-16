@@ -242,12 +242,13 @@ def Quantize(dimages, depthNames, dlevels=5):
         if i == 0:
             max_depth = np.max(dimages[depthNames[i]])
         max_depth = max(max_depth, np.max(dimages[depthNames[i]]))
-    # print ('max_depth',max_depth) = 255
+    # quantize
     depth_quantum = int(max_depth/dlevels)
-    # print(depth_quantum)
     for i in range(len(dimages)):
-        dimages[depthNames[i]] = (dimages[depthNames[i]]/dlevels).astype(np.uint8) #only dlevels
-        dimages[depthNames[i]] *= depth_quantum
+        dimg = dimages[depthNames[i]]
+        dimg = (dimg/depth_quantum).astype(np.uint8)
+        dimg *= depth_quantum
+        dimages[depthNames[i]] = dimg.astype(np.uint8)
     return dimages, depth_quantum
 
 '''

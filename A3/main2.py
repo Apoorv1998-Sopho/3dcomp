@@ -6,7 +6,8 @@ from helper import *
 ##########################################################
 #Reading files
 ##########################################################
-path = './RGBD dataset/'
+pathI = 'C'
+path = './RGBD dataset/' + pathI + '/'
 imagesNames = ['a.jpg', 'b.jpg']
 depthNames = ['d'+img for img in imagesNames]
 scale = (1, 1)
@@ -86,8 +87,7 @@ for i in range(dlevels):
     H, S = findHomoRanSac(n, r, list_kp, t, Tratio)
     Hs[i] = H
 print('Done HomoGraphies')
-print('HomoGraphies:', Hs)\
-
+print('HomoGraphies:', Hs)
 
 ##########################################################
 #Warp
@@ -109,9 +109,9 @@ for i in range(dlevels): # only want to warm one img
     regions[i] = np.multiply(images[imagesNames[0]], truevals)
 print('done regions')
 
-# a= [[[2,123,1],[231,2,122],[234,46,12]],
-#     [[234,56,1],[231,2,342],[34,76,97]],
-#     [[2,76,1],[231,2,122],[1,87,7]]]
+# a= [[[2,2,2],[2,2,2],[46,46,46]],
+#     [[46,46,46],[231,231,231],[76,76,76]],
+#     [[122,122,122],[122,122,122],[76,76,76]]]
 
 # b= [[[2,123,1],[0,0,0],[0,0,0]],
 #     [[0,0,0],[231,2,342],[0,0,0]],
@@ -141,7 +141,6 @@ out = strip(canvas2)
 print('done stripping')
 
 # spitting
-pathI = 'path2'
 cv.imshow("./result/"+pathI+"homographed.jpg", out)
 cv.imwrite("./result/"+pathI+"homographed.jpg", out)
 cv.waitKey(0)
