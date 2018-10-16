@@ -187,7 +187,6 @@ def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
             else:
                 weight = (j+1)/((float(width)/2))
 
-            # print (weight)
             vctr = np.array([[j,i,1]]).T #col vctr
             vctr2 = np.matmul(H, vctr)
             vctr2 /= vctr2[2,0] #last coordinate to 1
@@ -200,7 +199,6 @@ def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
             # if weightDic not provided don't do blending
             if weightDic != None: # if we have been provided weightDic
                 c = weight * np.full((fill, fill, 3), img[i,j])
-                # print ('i,j',i,j)
 
             else: # we have to do blending
                 c = np.full((fill, fill, 3), img[i,j])
@@ -208,23 +206,15 @@ def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
             try:
                 canvas[y:y+fill, x:x+fill] += c.astype(np.uint16)# to reduce tearing
                 # adding weight as weightDic[col, row] if weightDic provided
-                if weightDic != None: # if we have been provided weightDic (not None)
-                    # print(weight)
+                if weightDic != None:
                     for l in range(fill):
                         for k in range(fill):
-                            # print('x,ys',(x+l,y+k))
                             try:
                                 weightDic[(x+l,y+k)] += weight
                             except KeyError:
                                 weightDic[(x+l,y+k)] = weight
-                    # print(weightDic)
-                    # sys.exit()
             except ValueError:
                 print('not able to print, x,y', x, y)
-            # if i == 0 and j == 0:
-            #     print (np.full((fill, fill, 3), img[i,j]))
-            #     print (np.full((fill, fill, 3), img[i,j]).shape)
-    # print('returned')
     return
 
 def divideWeight(canvas, weightDic):

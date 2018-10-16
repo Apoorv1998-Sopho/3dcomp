@@ -78,7 +78,7 @@ for pathI in paths:
         Hs.append(H)
         Ss.append(S)
     print('done homographies')
-    print(Hs)
+    print('HomoGraphies', Hs)
 
     ##########################################################
     #Wrapping the images together using H
@@ -88,8 +88,6 @@ for pathI in paths:
     # x,y
     offset = [[3000,1000]]
     canvas = createCanvas(images[imagesNames[0]], factor)
-    print('image.shape', images[imagesNames[0]].shape)
-    print('canvas.shape', canvas.shape)
 
     print('finding realtive homographies')
     Hss = {int(imageNos/2): np.eye(3)}
@@ -99,10 +97,27 @@ for pathI in paths:
         Hss[i] = np.matmul(Hs[i], Hss[i+1])
     print('done realtive homographies')
 
-    # print ('Hss', Hss)
-    # print ('Hs', Hs)
+    # drawing unblended
+    for i in range(0, imageNos):
+        print('drawing', imagesNames[i])
+        drawOnCanvas(canvas, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1, weightDic=None)
+        print('drawn', imagesNames[i])
+    canvas = canvas.astype(np.uint8)
+    print ('stripping')
+    true_points = np.argwhere(canvas)
+    top_left = true_points.min(axis=0)
+    bottom_right = true_points.max(axis=0)
+    out = canvas[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
+                 top_left[1]:bottom_right[1]+1]  # inclusive
+    print('done stripping')
+    cv.imwrite("./result/"+pathI+"unblended.jpg", out)
+    # sys.exit()
 
-    # drawing
+    # drawing blended
+    factor = [int(imageNos*3), int(imageNos*5)]
+    # x,y
+    offset = [[3000,1000]]
+    canvas = createCanvas(images[imagesNames[0]], factor)
     weightDic = {}
     for i in range(0, imageNos):
         print('drawing', imagesNames[i])
@@ -112,20 +127,12 @@ for pathI in paths:
     # divide by weights at each pixel
     divideWeight(canvas, weightDic)
     canvas = canvas.astype(np.uint8)
-
-
-    # print (canvas)
-    # cv.imshow("Stitched Panorama", canvas)
-
     print ('stripping')
-    # argwhere will give you the coordinates of every non-zero point
     true_points = np.argwhere(canvas)
-    # take the smallest points and use them as the top left of your crop
     top_left = true_points.min(axis=0)
-    # take the largest points and use them as the bottom right of your crop
     bottom_right = true_points.max(axis=0)
     out = canvas[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
-              top_left[1]:bottom_right[1]+1]  # inclusive
+                 top_left[1]:bottom_right[1]+1]  # inclusive
     print('done stripping')
-    cv.imwrite("./result/"+pathI+"stitched.jpg", out)
+    cv.imwrite("./result/"+pathI+"blended.jpg", out)
 sys.exit()
