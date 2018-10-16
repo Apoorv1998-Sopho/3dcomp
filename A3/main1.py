@@ -97,11 +97,10 @@ for pathI in paths:
     canvas2 = createCanvas(images[imagesNames[0]], factor)
 
     #drawing unblended
-    print('stiching unblended')
+    print('drawing ', end= '')
     for i in range(0, imageNos):
-        print('drawing', imagesNames[i])
+        print(imagesNames[i], end=' ')
         drawOnCanvas(canvas2, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1, weightDic=None)
-        print('drawn', imagesNames[i])
     canvas2 = canvas2.astype(np.uint8)
 
     # stripping
@@ -124,10 +123,10 @@ for pathI in paths:
     print('stiching blended')
     #drawing blended
     weightDic = {}
+    print('drawing ', end= '')
     for i in range(0, imageNos):
-        print('drawing', imagesNames[i])
+        print(imagesNames[i], end=' ')
         drawOnCanvas(canvas, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1, weightDic)
-        print('drawn', imagesNames[i])
 
     # divide by weights at each pixel
     divideWeight(canvas, weightDic)
@@ -144,4 +143,5 @@ for pathI in paths:
 
     # spitting
     cv.imwrite("./result/"+pathI+"blended.jpg", out)
+print('check "./result"')
 sys.exit()
