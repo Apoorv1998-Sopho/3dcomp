@@ -141,6 +141,7 @@ def make_P(list_kp1, list_kp2):
     # making P matrix
     P = np.zeros((2*k, 9))
     for i in range(0,2*k,2):
+        # print(list_kp1[int(i/2)])
         x = list_kp1[int(i/2)][0]
         x_ = list_kp2[int(i/2)][0]
         y = list_kp1[int(i/2)][1]
@@ -237,3 +238,30 @@ def Quantize(dimages, depthNames, dlevels=5):
         dimages[depthNames[i]] = (dimages[depthNames[i]]/dlevels).astype(np.uint8) #only dlevels
         dimages[depthNames[i]] *= depth_quantum
     return dimages, depth_quantum
+
+'''
+Returns a dlevel length dictionary with keys as depthlevel
+Works to divide the keypoints in the first image of dimages
+'''
+# print(keyPointMatchings[0][0])
+# sys.exit()
+def keypt_divide_depth(dimages, depthNames, keyPointMatchings, dlevels, depth_quantum):
+    dname = depthNames[0]
+    keyPtsDivided = {}
+    length = len(keyPointMatchings[0])
+    # print ('# of KeyPoints matchings', length)
+    for i in range(length):
+        x,y = keyPointMatchings[0][i] # selecting all keypoints in first img
+        xi = int(x)
+        yi = int(y)
+        depthVal=dimages[dname][yi,xi]
+        dlevel = int(depthVal/depth_quantum)
+        # print('value of depth:', depthVal)
+        # print('dlevel of coordinate:', dlevel)
+        
+        try:
+            keyPtsDivided[dlevel].append((keyPointMatchings[0][i], keyPointMatchings[1][i]))
+        except:
+            keyPtsDivided[dlevel] = [(keyPointMatchings[0][i], keyPointMatchings[1][i])]
+    return keyPtsDivided
+
