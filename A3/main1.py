@@ -83,12 +83,6 @@ for pathI in paths:
     ##########################################################
     #Wrapping the images together using H
     ##########################################################
-    # first factor multiplie height
-    factor = [int(imageNos*3), int(imageNos*5)]
-    # x,y
-    offset = [[3000,1000]]
-    canvas = createCanvas(images[imagesNames[0]], factor)
-
     print('finding realtive homographies')
     Hss = {int(imageNos/2): np.eye(3)}
     for i in range(int(imageNos/2), imageNos-1):
@@ -97,27 +91,12 @@ for pathI in paths:
         Hss[i] = np.matmul(Hs[i], Hss[i+1])
     print('done realtive homographies')
 
-    # drawing unblended
-    for i in range(0, imageNos):
-        print('drawing', imagesNames[i])
-        drawOnCanvas(canvas, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1, weightDic=None)
-        print('drawn', imagesNames[i])
-    canvas = canvas.astype(np.uint8)
-    print ('stripping')
-    true_points = np.argwhere(canvas)
-    top_left = true_points.min(axis=0)
-    bottom_right = true_points.max(axis=0)
-    out = canvas[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
-                 top_left[1]:bottom_right[1]+1]  # inclusive
-    print('done stripping')
-    cv.imwrite("./result/"+pathI+"unblended.jpg", out)
-    # sys.exit()
-
-    # drawing blended
-    factor = [int(imageNos*3), int(imageNos*5)]
-    # x,y
-    offset = [[3000,1000]]
+    # create canvas
+    factor = [int(imageNos*3), int(imageNos*5)] # dy,dx
+    offset = [[3000,1000]] # x,y
     canvas = createCanvas(images[imagesNames[0]], factor)
+
+    #drawing blended
     weightDic = {}
     for i in range(0, imageNos):
         print('drawing', imagesNames[i])
@@ -127,6 +106,8 @@ for pathI in paths:
     # divide by weights at each pixel
     divideWeight(canvas, weightDic)
     canvas = canvas.astype(np.uint8)
+
+    # stripping
     print ('stripping')
     true_points = np.argwhere(canvas)
     top_left = true_points.min(axis=0)
@@ -134,5 +115,7 @@ for pathI in paths:
     out = canvas[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
                  top_left[1]:bottom_right[1]+1]  # inclusive
     print('done stripping')
+
+    # spitting
     cv.imwrite("./result/"+pathI+"blended.jpg", out)
 sys.exit()

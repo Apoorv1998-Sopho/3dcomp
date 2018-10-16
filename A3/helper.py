@@ -181,11 +181,12 @@ def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
     height, width, chnl = img.shape
     for i in range(height):
         for j in range(width):
-            # finding the weight not exactly zero at edges
-            if j > int(width/2):
-                weight = (width - j+1) / ((float(width)/2))
-            else:
-                weight = (j+1)/((float(width)/2))
+            if weightDic != None:
+                # finding the weight not exactly zero at edges
+                if j > int(width/2):
+                    weight = (width - j+1) / ((float(width)/2))
+                else:
+                    weight = (j+1)/((float(width)/2))
 
             vctr = np.array([[j,i,1]]).T #col vctr
             vctr2 = np.matmul(H, vctr)
@@ -200,7 +201,7 @@ def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None):
             if weightDic != None: # if we have been provided weightDic
                 c = weight * np.full((fill, fill, 3), img[i,j])
 
-            else: # we have to do blending
+            else: # weightDic == None
                 c = np.full((fill, fill, 3), img[i,j])
 
             try:
