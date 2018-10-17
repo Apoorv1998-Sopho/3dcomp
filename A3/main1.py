@@ -7,7 +7,6 @@ https://kushalvyas.github.io/stitching.html
 import cv2 as cv
 import numpy as np
 import sys
-import matplotlib.pyplot as plt
 from helper import *
 ##########################################################
 #Reading files
@@ -45,7 +44,6 @@ for pathI in paths:
     #Finding matchings for best 'm' matching images for each image
     ##########################################################
     print('finding keymatches')
-    dirr = './result/Part1'+pathI
     lowsR = 0.85 # low's ratio
     goodMatchings={}
     for i in range(imageNos-1):
@@ -53,7 +51,7 @@ for pathI in paths:
         imgB = imagesNames[i+1]
         goodMatchings[(imgA,imgB)]= keyPointMatching(images, 
                                   imageKeyPoints, imageDescriptors, 
-                                  imgA, imgB, dirr, lowsR)
+                                  imgA, imgB, lowsR)
     print('done keymatches')
 
     ##########################################################
@@ -72,10 +70,11 @@ for pathI in paths:
         imgA = imagesNames[i]
         imgB = imagesNames[i+1]
         list_kp = goodMatchings[(imgA, imgB)]
+        # finding the homographies
         if (not built_in):
             H, S = findHomoRanSac(n, r, list_kp, t, Tratio)
         else:
-            H, S = cv.findHomography(list_kp[1], list_kp[0], cv.RANSAC, 4)
+            H, S = cv.findHomography(np.array(list_kp[0]), np.array(list_kp[1]), cv.RANSAC, 4)
         Hs.append(H)
         Ss.append(S)
     print('done homographies')
@@ -92,31 +91,34 @@ for pathI in paths:
         Hss[i] = np.matmul(Hs[i], Hss[i+1])
     print('done realtive homographies')
 
+    # create canvas
+    factor = [int(imageNos*3), int(imageNos*5)] # dy,dx
+    offset = [[3000,1000]] # x,y
+    canvas2 = createCanvas(images[imagesNames[0]], factor)
+
+    #drawing unblended
+    print('drawing ', end= '')
+    for i in range(0, imageNos):
+        print(imagesNames[i], end=' ')
+        drawOnCanvas(canvas2, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1, weightDic=None)
+    canvas2 = canvas2.astype(np.uint8)
+
+    # stripping
+    print ('stripping')
+    true_points = np.argwhere(canvas2)
+    top_left = true_points.min(axis=0)
+    bottom_right = true_points.max(axis=0)
+    out = canvas2[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
+                 top_left[1]:bottom_right[1]+1]  # inclusive
+    print('done stripping')
+
+    # spitting
     if not built_in:
-        # create canvas
-        factor = [int(imageNos*3), int(imageNos*5)] # dy,dx
-        offset = [[3000,1000]] # x,y
-        canvas2 = createCanvas(images[imagesNames[0]], factor)
-
-        #drawing unblended
-        print('drawing ', end= '')
-        for i in range(0, imageNos):
-            print(imagesNames[i], end=' ')
-            drawOnCanvas(canvas2, images[imagesNames[i]], Hss[i], offset, abs(int(imageNos/2)-i)+1, weightDic=None)
-        canvas2 = canvas2.astype(np.uint8)
-
-        # stripping
-        print ('stripping')
-        true_points = np.argwhere(canvas2)
-        top_left = true_points.min(axis=0)
-        bottom_right = true_points.max(axis=0)
-        out = canvas2[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
-                     top_left[1]:bottom_right[1]+1]  # inclusive
-        print('done stripping')
-
-        # spitting
         cv.imwrite("./result/"+pathI+"unblended.jpg", out)
+    else: # built_in
+        cv.imwrite("./result/"+pathI+"built_in.jpg", out)
 
+    if not built_in:
         # create canvas
         factor = [int(imageNos*3), int(imageNos*5)] # dy,dx
         offset = [[3000,1000]] # x,y
@@ -136,20 +138,10 @@ for pathI in paths:
 
         # stripping
         print ('stripping')
-        true_points = np.argwhere(canvas)
-        top_left = true_points.min(axis=0)
-        bottom_right = true_points.max(axis=0)
-        out = canvas[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
-                     top_left[1]:bottom_right[1]+1]  # inclusive
+        out = strip(canvas)
         print('done stripping')
 
         # spitting
         cv.imwrite("./result/"+pathI+"blended.jpg", out)
-
-
-    else: # built_in
-        pass
-        
-
 print('check "./result"')
 sys.exit()

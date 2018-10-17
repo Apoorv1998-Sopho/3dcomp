@@ -1,7 +1,6 @@
 import cv2 as cv
 import numpy as np
 import sys
-import matplotlib.pyplot as plt
 
 # images is a list of numpy arrays, containing images
 def keyPoints(images, imagesNames): # add an option to send a list of strings, where keypoints return
@@ -21,7 +20,7 @@ def keyPoints(images, imagesNames): # add an option to send a list of strings, w
     # compare each image with every other
     return (imageKeyPoints, imageDescriptors)
 
-def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB, dirr, lowsR):
+def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB, lowsR):
     FLANN_INDEX_KDTREE = 0
     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
     search_params = dict(checks=50)   # or pass empty dictionary
@@ -39,17 +38,6 @@ def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB, dirr,
                                           # then the match is good
             good[0].append(imageKeyPoints[imgA][m.queryIdx].pt)
             good[1].append(imageKeyPoints[imgB][m.trainIdx].pt)
-
-    # #print(type(matches))
-    # matchesMask = [[0,0] for i in range(len(matches))]
-    # draw_params = dict(matchColor=(0,255,0),
-    #                   singlePointColor=(255,0,0),
-    #                   matchesMask=matchesMask,
-    #                   flags=0)
-    # img3 = cv.drawMatchesKnn(images[imgA], imageKeyPoints[imgA], images[imgB],
-    #                          imageKeyPoints[imgB], matches, None, **draw_params)
-    # cv.imshow("correspondences", img3)
-    # cv.waitKey()
     return good
 
 '''
@@ -213,6 +201,7 @@ def drawOnCanvas(canvas, img, H, offset, fill, weightDic=None, blackPixelPrint=T
                                 weightDic[(x+l,y+k)] = weight
             except ValueError:
                 print('not able to print, x,y', x, y)
+                pass
     return
 
 def divideWeight(canvas, weightDic):
@@ -276,4 +265,3 @@ def keypt_divide_depth(dimages, depthNames, keyPointMatchings, dlevels, depth_qu
         except:
             keyPtsDivided[dlevel] = [[],[]]
     return keyPtsDivided
-
