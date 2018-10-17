@@ -8,8 +8,8 @@ from helper import *
 ##########################################################
 # setting some variables
 warp_usual = False
-dlevels = 5
-pathI = 'D'
+dlevels = 5 
+pathI = 'D' # change this to run on 'A' or 'B' or 'C'
 path = './RGBD dataset/' + pathI + '/'
 imagesNames = ['a.jpg', 'b.jpg']
 depthNames = ['d'+img for img in imagesNames]
@@ -19,6 +19,11 @@ dimages = {} # will have 1 chnl imgs
 imageNos = len(imagesNames)
 m = 3
 k = 4
+lowsR = .75 # low's ratio, taking big, cz not many matchings
+n = 1000
+r = 4
+t = 2
+Tratio = 0.95
 
 ##########################################################
 #Rescaling
@@ -51,13 +56,11 @@ print('done keypoints and discriptors')
 #Finding matchings for best 'm' matching images for each image
 ##########################################################
 print('finding keymatches')
-dirr = './result/Part2'
 imgA = imagesNames[0]
 imgB = imagesNames[1]
-lowsR = .95 # low's ratio, taking big, cz not many matchings
 keyPointMatchings = keyPointMatching(images, imageKeyPoints,
                         imageDescriptors,
-                        imgA, imgB, dirr, lowsR)
+                        imgA, imgB, lowsR)
 print('done keymatches')
 
 ##########################################################
@@ -70,34 +73,25 @@ keyPtsDivided = keypt_divide_depth(dimages, depthNames, keyPointMatchings, dleve
 ##########################################################
 #Find HomoGraphies
 ##########################################################
-n = 1000
-r = 4
-t = 2
-Tratio = 0.95
 
 # Dict containing HomoGraphies
 print('Finding HomoGraphies')
 Hs = {}
 for i in range(dlevels):
-    list_kp = keyPtsDivided[i]
     try:
-        H, S = findHomoRanSac(n, r, list_kp, t, Tratio)
-    except ValueError: # when not enough points
-        H = None
+        list_kp = keyPtsDivided[i]
+        try:
+            H, S = findHomoRanSac(n, r, list_kp, t, Tratio)
+            if len(S[0]) < 10: # if the number of inliers small, H unrealible
+                H=Hs[i-1] # interpolate with prev H
+        except ValueError: # when not enough points
+            H=Hs[i-1]
+    except KeyError: # not even one keypoint matching
+        H = Hs[i-1]
+    
     Hs[i] = H
 print('Done HomoGraphies')
 print('HomoGraphies:', Hs)
-
-# interpolating Those H which couldn't be calculated
-for i in range(dlevels):
-    if Hs[i].tolist() == None:
-        try:
-            Hs[i] = (Hs[i-1] + Hs[i+1])/2
-        except KeyError:
-            try:
-                Hs[i] = Hs[i-1]
-            except KeyError:
-                Hs[i] = Hs[i+1]
 
 ##########################################################
 #Warp
@@ -121,12 +115,12 @@ for i in range(dlevels): # only want to warm one img
 print('done regions')
 
 # printing ref img
-print('drawing ', end= '')
+print('drawing dlevel: ', end= '')
 # drawOnCanvas(canvas2, images[imagesNames[1]], np.eye(3), offset, fill=1, weightDic=None)
 for i in range(dlevels):
-    print('dlevel:', i, end=' ')
+    print(i, end=' ')
     drawOnCanvas(canvas2, regions[i], Hs[i], offset, 
-                 fill=2, weightDic=None, blackPixelPrint=False)
+                 fill=3, weightDic=None, blackPixelPrint=False)
 canvas2 = canvas2.astype(np.uint8)
 
 # stripping
@@ -135,7 +129,6 @@ out = strip(canvas2)
 print('done stripping')
 
 # spitting
-cv.imshow("./result/"+pathI+"homographed.jpg", out)
-cv.imwrite("./result/"+pathI+"homographed.jpg", out)
-cv.waitKey(0)
+cv.imwrite("./result/"+pathI+"warped.jpg", out)
+print('check "./result/'+pathI+'warped.jpg"')
 sys.exit()
