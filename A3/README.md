@@ -1,6 +1,8 @@
 # Intro
 This folder deals with panorama stitching. I have implemeneted custom homography calculation function `findHomoRanSac` which take in a number of parameters to modify the RANSAC algorithm. I have also implemented a blending mechenism built into the function `drawOnCanvas` which does partial blending and the rest of the blending is done by `divideWeight`.
 
+**Note**: To have a look at the precompiled results have a look at `saved_result`.
+
 Run `main1.py` to get the resulting panoramas in `result/`.
 Run `main2.py` to get the resulting warped RGBD reference images in `result/`.
 
@@ -19,7 +21,7 @@ One can set the value of `built_in` variable to `True` to use inbuilt function i
 ### Details
 * I have used linear blending along the horizontal axis only, as the images that have been provided are horizontally stitched.
 * I have used the threshold value in the RANSAC to be equal to 2 pixels.
-* I have used `lowe's ratio` in finding good keypoint matches as it increase the realibility of the keypoint matches between images.
+* I have used `lowe's ratio = 0.85` in finding good keypoint matches as it increase the realibility of the keypoint matches between images.
 
 
 
@@ -28,3 +30,5 @@ One can set the value of `built_in` variable to `True` to use inbuilt function i
 One can set the value of `usual_warping` variable to `True` to use usual warping without the quantizations w.r.t. depths. Both the cases use the custom functions as the correctness of the custom functions could be checked by setting `built_in` to `True` in the first part.
 ### Details
 * I have divided the reference image in only `5` `dlevels` as the number of good keypoint matchings was drastically decreasing with `dlevels` set to `10`.
+* Whenever there are less than `10` inliers when dealing with different depths, I use interpolation for determining `H` as the `H` that we would get in such a case would be unrealiable due to so few points.
+* I have used `lowe's ratio = 0.75` in finding good keypoint matches
