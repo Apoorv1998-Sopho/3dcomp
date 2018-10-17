@@ -14,7 +14,7 @@ from helper import *
 built_in = False # to switch between built-in or custom
 paths = ['I1', 'I4', 'I5']
 for pathI in paths:
-    path = './Images_Asgnmt3_1/' + pathI + '/'
+    path = '../data/normal/' + pathI + '/'
     imagesNames = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg']#, 'e.jpg', 'f.jpg']
     scale = (0.2, 0.2)
     images = {} # will have 3 channel color imgs
@@ -83,13 +83,13 @@ for pathI in paths:
     ##########################################################
     #Wrapping the images together using H
     ##########################################################
-    print('finding realtive homographies')
+    print('finding relative homographies')
     Hss = {int(imageNos/2): np.eye(3)}
     for i in range(int(imageNos/2), imageNos-1):
         Hss[i+1] = np.matmul(np.linalg.inv(Hs[i]), Hss[i])
     for i in range(int(imageNos/2)-1, -1, -1):
         Hss[i] = np.matmul(Hs[i], Hss[i+1])
-    print('done realtive homographies')
+    print('done relative homographies')
 
     # create canvas
     factor = [int(imageNos*3), int(imageNos*5)] # dy,dx
@@ -114,9 +114,9 @@ for pathI in paths:
 
     # spitting
     if not built_in:
-        cv.imwrite("./result/"+pathI+"unblended.jpg", out)
+        cv.imwrite("../result/"+pathI+"unblended.jpg", out)
     else: # built_in
-        cv.imwrite("./result/"+pathI+"built_in.jpg", out)
+        cv.imwrite("../result/"+pathI+"built_in.jpg", out)
 
     if not built_in:
         # create canvas
@@ -142,6 +142,6 @@ for pathI in paths:
         print('done stripping')
 
         # spitting
-        cv.imwrite("./result/"+pathI+"blended.jpg", out)
-print('check "./result"')
+        cv.imwrite("../result/"+pathI+"blended.jpg", out)
+print('check "../result"')
 sys.exit()
