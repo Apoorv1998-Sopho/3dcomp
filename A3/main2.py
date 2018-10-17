@@ -6,7 +6,10 @@ from helper import *
 ##########################################################
 #Reading files
 ##########################################################
-pathI = 'A'
+# setting some variables
+warp_usual = False
+dlevels = 5
+pathI = 'D'
 path = './RGBD dataset/' + pathI + '/'
 imagesNames = ['a.jpg', 'b.jpg']
 depthNames = ['d'+img for img in imagesNames]
@@ -33,8 +36,7 @@ for dimg in depthNames:
           	         fy=scale[1], interpolation=cv.INTER_CUBIC)
     dimages[dimg] = temp # depth imgs are rowxcolx3 with 3 values being same
 del temp
-# print('images.shape',images[imagesNames[0]].shape)
-# print('dimages.shape',dimages[depthNames[0]].shape)
+
 
 ##########################################################
 #Finding KeyPoints and Discriptors
@@ -43,6 +45,7 @@ print('finding keypoints and discriptors')
 imageKeyPoints, imageDescriptors = keyPoints(images, imagesNames)
 print('done keypoints and discriptors')
 # retured dictionaries with keys as imageNames
+
 
 ##########################################################
 #Finding matchings for best 'm' matching images for each image
@@ -60,15 +63,9 @@ print('done keymatches')
 ##########################################################
 #Quantize the depth image
 ##########################################################
-dlevels = 5
-dimages, depth_quantum = Quantize(dimages,depthNames, dlevels)
-# print(dimages[depthNames[0]])
-cv.imshow("Quantized image", dimages[depthNames[0]])
-cv.waitKey(0)
-cv.destroyAllWindows()
 
+dimages, depth_quantum = Quantize(dimages,depthNames, dlevels)
 keyPtsDivided = keypt_divide_depth(dimages, depthNames, keyPointMatchings, dlevels, depth_quantum)
-# print(len(keyPtsDivided[0]))
 
 ##########################################################
 #Find HomoGraphies
@@ -82,9 +79,7 @@ Tratio = 0.95
 print('Finding HomoGraphies')
 Hs = {}
 for i in range(dlevels):
-    # print(type(keyPtsDivided[i]))
     list_kp = keyPtsDivided[i]
-    # print(list_kp[0])
     try:
         H, S = findHomoRanSac(n, r, list_kp, t, Tratio)
     except ValueError: # when not enough points
@@ -119,29 +114,15 @@ dimg = dimages[depthNames[0]]
 print('Finding regions')
 for i in range(dlevels): # only want to warm one img
     depth = depth_quantum * i
-    # print (dimg, dimg.shape)
     truevals = dimg == depth
     regions[i] = np.multiply(images[imagesNames[0]], truevals)
+    # cv.imshow('r', regions[i])
+    # cv.waitKey(0)
 print('done regions')
-
-# a= [[[2,2,2],[2,2,2],[46,46,46]],
-#     [[46,46,46],[231,231,231],[76,76,76]],
-#     [[122,122,122],[122,122,122],[76,76,76]]]
-
-# b= [[[2,123,1],[0,0,0],[0,0,0]],
-#     [[0,0,0],[231,2,342],[0,0,0]],
-#     [[0,0,0],[0,0,0],[1,87,7]]]
-
-# c= [[[1,1,1],[0,0,0],[0,0,0]],
-#     [[0,0,0],[1,1,1],[0,0,0]],
-#     [[0,0,0],[0,0,0],[1,1,1]]]
-# a = np.array(a)
-# b = np.array(b)
-# c = np.array(c)
 
 # printing ref img
 print('drawing ', end= '')
-drawOnCanvas(canvas2, images[imagesNames[1]], np.eye(3), offset, fill=1, weightDic=None)
+# drawOnCanvas(canvas2, images[imagesNames[1]], np.eye(3), offset, fill=1, weightDic=None)
 for i in range(dlevels):
     print('dlevel:', i, end=' ')
     drawOnCanvas(canvas2, regions[i], Hs[i], offset, 
