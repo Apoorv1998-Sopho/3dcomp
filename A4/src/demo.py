@@ -71,7 +71,7 @@ for pathI in paths:
         # finding the fundamental matrices, using ransac
         F, S = cv.findFundamentalMat(np.array(list_kp[0]), np.array(list_kp[1]))
     print('done Fundamentals')
-    print('Fundamental Matrices:', F)
+    print('Fundamental Matrix:', F)
 
     ##########################################################
     # Mannually selecting the interest points on I1, I2, I3
@@ -101,6 +101,7 @@ for pathI in paths:
     ##########################################################
     # For each point in I1, find epiline
     ##########################################################
+    print('Finding the epilines for each point')
     I1 = images[0]
     I2 = images[1]
     h, w, chl = I1.shape
@@ -108,24 +109,38 @@ for pathI in paths:
     listOfPoints = []
     for y in range(h):
         for x in range(w):
-            pt = (y,x)
+            pt = (x, y)
             listOfPoints.append(pt)
 
     # compute epilines for each pt
     epilines = findEpilines(np.array(listOfPoints), F)
-    print('epilines', epilines)
-    print(epilines.shape)
+    print('done')
+    # print('epilines', epilines)
+    # print(epilines.shape)
 
     ##########################################################
     # For each point in I1, find the corresp I2 point
     ##########################################################
+    print('Find the point corresp to every point in I1')
+    channel = 'RGB'
     h, w, chl = I2.shape
-    for epiline in epilines:
+    for i in range(len(epilines)):
+        epiline = epilines[i]
         vPts = findValidPoints(epiline, (h, w))
         if len(vPts) == 0: # no valid point
-        	continue
-        print ('ValidPoints:', vPts)
-        findCustomDiscriptor(I2, vPts, channel='RGB')
+            continue
+
+        # returns discriptors in rows
+        discriptors = findCustomDiscriptor(I2, vPts, channel=channel)
+        ptI1 = listOfPoints[i]
+        I1ptDiscriptor = findCustomDiscriptor(I1, [ptI1], channel=channel) # can return empty array
+        if I1ptDiscriptor.size != 0:
+            print('I1ptDiscriptor',I1ptDiscriptor)
+            sys.exit()
+
+
+
+
     intersection = {}
     for i in range(-1, 2):
         a = np.zeros((2,2))

@@ -93,11 +93,18 @@ def findValidPoints(epiline, dim, width=10, padd=1):
 
 def findCustomDiscriptor(image, Points, channel='RGB'):
     discriptors = []
-    if channel == 'RGB':
-        for pt in Points:
-            x, y = pt
-            print('Discriptor', image[y-1:y+2,x-1:x+2])
-            # sys.exit()
+    for pt in Points:
+        x, y = pt
+        if channel == 'RGB':
+            temp = image[y-1:y+2,x-1:x+2]
+        elif channel == 'LAB':
+            temp = image[y-1:y+2,x-1:x+2, 1:] # ignoring Luminence
+        temp = temp.flatten(order='F')
+        # print('temp', temp)
+        discriptors.append(temp)
+        # print('Discriptor', image[y-1:y+2,x-1:x+2])
+        # sys.exit()
+    return np.array(discriptors)
 
 def drawlinesP(imgwithlines,lines):
     r,c, chl = imgwithlines.shape
