@@ -20,7 +20,7 @@ for pathI in paths:
     images = {} # will have 3 channel color imgs
     imageNos = len(imagesNames)
     imgB = 1
-    width_epipolar = 3 # width of the epiline to chck correspondences
+    width_epipolar = 3 # width/2 of the epiline to chck correspondences
 
     ##########################################################
     #Rescaling
