@@ -16,7 +16,7 @@ paths = ['I1']
 for pathI in paths:
     path = '../data/normal/' + pathI + '/'
     imagesNames = ['a.jpg', 'b.jpg']#, 'c.jpg', 'd.jpg']#, 'e.jpg', 'f.jpg']
-    scale = (0.2, 0.2)
+    scale = (0.05, 0.05)
     images = {} # will have 3 channel color imgs
     imageNos = len(imagesNames)
     imgB = 1
@@ -121,37 +121,49 @@ for pathI in paths:
     ##########################################################
     # For each point in I1, find the corresp I2 point
     ##########################################################
-    print('Find the point corresp to every point in I1')
+    print('Find the point corresp to every point in I1, please wait..')
     channel = 'RGB'
+    width = 2
     h, w, chl = I2.shape
+    Iout = np.zeros((h, w, chl))
     for i in range(len(epilines)):
         epiline = epilines[i]
-        vPts = findValidPoints(epiline, (h, w))
+        vPts = findValidPoints(epiline, (h, w), width)
         if len(vPts) == 0: # no valid point
             continue
 
         # returns discriptors in rows
         discriptors = findCustomDiscriptor(I2, vPts, channel=channel)
-        ptI1 = listOfPoints[i]
-        I1ptDiscriptor = findCustomDiscriptor(I1, [ptI1], channel=channel) # can return empty array
-        if I1ptDiscriptor.size != 0:
-            print('I1ptDiscriptor',I1ptDiscriptor)
-            sys.exit()
+        if discriptors == None:
+        	continue
+        	# print('none aya')
+        if discriptors != None:
+            # print('discriptors',discriptors)
+            ptI1 = listOfPoints[i]
+            I1ptDiscriptor = findCustomDiscriptor(I1, [ptI1], channel=channel) # can return empty array
+            if I1ptDiscriptor != None:
+                # print('I1ptDiscriptor',I1ptDiscriptor)
+                keys = list(discriptors.keys())
+                dis = np.array([discriptors[key] for key in keys])
+                # print('dis', dis, 'dis.shape', dis.shape) 
+                # print(I1ptDiscriptor[ptI1])
+                temp = dis - I1ptDiscriptor[ptI1].astype(float)
+                # print(temp) # underflow happening
+                temp = np.linalg.norm(temp, axis=1)
+                min_index = np.argmin(temp)
+                argminKey = keys[min_index]
+                y_ = argminKey[1]
+                x_ = argminKey[0]
+                y = ptI1[1]
+                x = ptI1[0]
+                Iout[y_,x_] = I1[y,x]
+    
+    np.save('t', Iout)
+    Iout = Iout.astype(np.uint8)
+    cv.imshow('out', Iout)
+    cv.waitKey(0)
+    sys.exit()
 
-
-
-
-    intersection = {}
-    for i in range(-1, 2):
-        a = np.zeros((2,2))
-        a[0:1,:] = np.array([[lines[i][0][0], lines[i][0][1]]])
-        a[1:2,:] = np.array([[lines[i+1][0][0], lines[i+1][0][1]]])
-        b = np.zeros([2,1])
-        b[0,0] = np.array(-lines[i][0][2])
-        b[1,0] = np.array(-lines[i+1][0][2])
-        inter = np.linalg.solve(a,b)
-        intersection[i] = inter
-    print ('intersection points:', intersection)
 
     ##########################################################
     # find the equations of the parrellel lines

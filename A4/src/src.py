@@ -75,7 +75,7 @@ def findEpilines(Points, F):
     temp = cv.computeCorrespondEpilines(Points, 1, F)
     return np.squeeze(temp, axis=1)
 
-def findValidPoints(epiline, dim, width=10, padd=1):
+def findValidPoints(epiline, dim, width=2, padd=1):
     h, w = dim
     a, b, c = epiline
     validPoints = []
@@ -92,7 +92,11 @@ def findValidPoints(epiline, dim, width=10, padd=1):
     return validPoints
 
 def findCustomDiscriptor(image, Points, channel='RGB'):
-    discriptors = []
+    discriptors = {}
+    dsize = 18
+    if channel == 'RGB':
+        dsize = 27
+
     for pt in Points:
         x, y = pt
         if channel == 'RGB':
@@ -101,17 +105,14 @@ def findCustomDiscriptor(image, Points, channel='RGB'):
             temp = image[y-1:y+2,x-1:x+2, 1:] # ignoring Luminence
         temp = temp.flatten(order='F')
         # print('temp', temp)
-        discriptors.append(temp)
+        if temp.size == dsize:
+            # assert(temp.size == 9)
+            discriptors[pt] = np.array(temp)
+        else:
+            continue
         # print('Discriptor', image[y-1:y+2,x-1:x+2])
         # sys.exit()
-    return np.array(discriptors)
 
-def drawlinesP(imgwithlines,lines):
-    r,c, chl = imgwithlines.shape
-    for r in lines.values():
-        # print (r)
-        color = tuple(np.random.randint(0,255,3).tolist())
-        x0,y0 = map(int, [0, -r[2]/r[1] ])
-        x1,y1 = map(int, [c, -(r[2]+r[0]*c)/r[1] ])
-        imgwithlines = cv.line(imgwithlines, (x0,y0), (x1,y1), color,1)
-    return imgwithlines
+    if len(discriptors.keys()) == 0:
+        return None
+    return discriptors
