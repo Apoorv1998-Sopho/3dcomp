@@ -63,26 +63,41 @@ def findValidPoints(epiline, dim, width=2, padd=1):
 
 def findCustomDiscriptor(image, Points, channel='RGB'):
     discriptors = {}
-    dsize = 18
-    if channel == 'RGB':
-        dsize = 27
 
-    for pt in Points:
-        x, y = pt
+    if method == 'SIFT':
+        sift = cv2.xfeatures2d.SIFT_create()
+        for pt in Points:
+            x, y = pt
+            kplist1 = []
+                kplist1.append(cv.KeyPoint(x, y,7))
+            kp1,des1 = sift.compute(image, kplist1)
+        for i in range(len(kp1)):
+            discriptors[kp1[i]] = des1[i]
+        if len(discriptors) == 0:
+            return None
+        return discriptors
+
+    elif method == 'local':
+        dsize = 18
         if channel == 'RGB':
-            temp = image[y-1:y+2,x-1:x+2]
-        elif channel == 'LAB':
-            temp = image[y-1:y+2,x-1:x+2, 1:] # ignoring Luminence
-        temp = temp.flatten(order='F')
-        # print('temp', temp)
-        if temp.size == dsize:
-            # assert(temp.size == 9)
-            discriptors[pt] = np.array(temp)
-        else:
-            continue
-        # print('Discriptor', image[y-1:y+2,x-1:x+2])
-        # sys.exit()
+            dsize = 27
 
-    if len(discriptors.keys()) == 0:
-        return None
+        for pt in Points:
+            x, y = pt
+            if channel == 'RGB':
+                temp = image[y-1:y+2,x-1:x+2]
+            elif channel == 'LAB':
+                temp = image[y-1:y+2,x-1:x+2, 1:] # ignoring Luminence
+            temp = temp.flatten(order='F')
+            # print('temp', temp)
+            if temp.size == dsize:
+                # assert(temp.size == 9)
+                discriptors[pt] = np.array(temp)
+            else:
+                continue
+            # print('Discriptor', image[y-1:y+2,x-1:x+2])
+            # sys.exit()
+
+        if len(discriptors.keys()) == 0:
+            return None
     return discriptors
