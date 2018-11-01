@@ -37,39 +37,9 @@ def keyPointMatching(images, imageKeyPoints, imageDescriptors, imgA, imgB, lowsR
             good[1].append(imageKeyPoints[imgB][m.trainIdx].pt)
     return good
 
-def drawPoint(canvas, RGBvalue, cord):
-    x = cord[0]
-    y = cord[1]
-    canvas[y, x] = RGBvalue
-    return
-
 def createCanvas(img, factor=(3,3)):
     height, width, chnl = img.shape
     return np.zeros((height*factor[1], width*factor[0], chnl), dtype=np.uint16)
-
-def strip(canvas2):
-    true_points = np.argwhere(canvas2)
-    top_left = true_points.min(axis=0)
-    bottom_right = true_points.max(axis=0)
-    out = canvas2[top_left[0]:bottom_right[0]+1,  # plus 1 because slice isn't
-                 top_left[1]:bottom_right[1]+1]  # inclusive
-    return out
-
-'''
-imgwithlines - image on which we draw the epilines
-for the points in img2 lines - corresponding epilines
-https://docs.opencv.org/trunk/da/de9/tutorial_py_epipolar_geometry.html
-'''
-def drawlines(imgwithlines,img2,lines,pts1,pts2):
-    r,c, chl = imgwithlines.shape
-    for r,pt1,pt2 in zip(lines,pts1,pts2):
-        color = tuple(np.random.randint(0,255,3).tolist())
-        x0,y0 = map(int, [0, -r[2]/r[1] ])
-        x1,y1 = map(int, [c, -(r[2]+r[0]*c)/r[1] ])
-        imgwithlines = cv.line(imgwithlines, (x0,y0), (x1,y1), color,1)
-        imgwithlines = cv.circle(imgwithlines,tuple(pt1),5,color,-1)
-        img2 = cv.circle(img2,tuple(pt2),5,color,-1)
-    return imgwithlines,img2
 
 def findEpilines(Points, F):
     temp = cv.computeCorrespondEpilines(Points, 1, F)
