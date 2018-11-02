@@ -5,9 +5,9 @@ Code samples from:
 https://kushalvyas.github.io/stitching.html
 '''
 import cv2 as cv
-import numpy as np
 import sys
 from src import *
+import numpy as np
 import matplotlib.pyplot as plt
 ##########################################################
 #Reading files
@@ -20,7 +20,8 @@ for pathI in paths:
     images = {} # will have 3 channel color imgs
     imageNos = len(imagesNames)
     imgB = 1
-    width_epipolar = 3 # width/2 of the epiline to chck correspondences
+    width_epipolar = 2 # width/2 of the epiline to chck correspondences
+    method = 'SIFT'
 
     ##########################################################
     #Rescaling
@@ -105,12 +106,12 @@ for pathI in paths:
             continue
 
         # returns discriptors in rows
-        discriptors = findCustomDiscriptor(I2, vPts, channel=channel)
+        discriptors = findCustomDiscriptor(I2, vPts, channel=channel, method=method)
         if discriptors == None:
         	continue
         if discriptors != None:
             ptI1 = listOfPoints[i]
-            I1ptDiscriptor = findCustomDiscriptor(I1, [ptI1], channel=channel) # can return empty array
+            I1ptDiscriptor = findCustomDiscriptor(I1, [ptI1], channel=channel, method=method) # can return empty array
             if I1ptDiscriptor != None:
                 keys = list(discriptors.keys())
                 dis = np.array([discriptors[key] for key in keys])
@@ -125,8 +126,5 @@ for pathI in paths:
                 Iout[y_,x_] = I1[y,x]
 
     Iout = Iout.astype(np.uint8)
-    np.save('out', Iout)
-    plt.imshow('out', Iout)
-    plt.imwrite('out.jpg', Iout)
+    plt.imshow(Iout)
     plt.show()
-    sys.exit()
