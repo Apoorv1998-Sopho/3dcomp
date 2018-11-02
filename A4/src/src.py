@@ -61,20 +61,25 @@ def findValidPoints(epiline, dim, width=2, padd=1):
             pass
     return validPoints
 
-def findCustomDiscriptor(image, Points, channel='RGB', method='local'):
+def findCustomDiscriptor(image, Points, d, listOfPoints, channel='RGB', method='local'):
     discriptors = {}
 
     if method == 'SIFT':
-        sift = cv.xfeatures2d.SIFT_create()
-        kplist1 = []
-        for pt in Points:
-            x, y = pt
-            kplist1.append(cv.KeyPoint(x, y,7))
+        if len(d) == 0:
+            # print('one timeer')
+            sift = cv.xfeatures2d.SIFT_create()
+            kplist1 = []
+            for i in range(len(listOfPoints)):
+                x, y = listOfPoints[i]
+                kplist1.append(cv.KeyPoint(x, y, 4))
             kp1,des1 = sift.compute(image, kplist1)
-        for i in range(len(Points)):
-            discriptors[Points[i]] = des1[i]
+            for i in range(len(listOfPoints)):
+                d[listOfPoints[i]] = des1[i]
+        for pt in Points:
+            discriptors[pt]=d[pt]
         if len(discriptors) == 0:
             return None
+        # print (discriptors)
         return discriptors
 
     elif method == 'local':
