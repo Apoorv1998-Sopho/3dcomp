@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 ##########################################################
 #Reading files
 ##########################################################
-paths = ['I1','I2','I3','I4']
+paths = ['I1','I2','I3']
 for pathI in paths:
     path = '../data/' + pathI + '/'
     imagesNames = ['a.png', 'b.png']
@@ -62,10 +62,6 @@ for pathI in paths:
     ##########################################################
     # Finding F the pair of image
     ##########################################################
-    n = 1000 # iterations
-    r = 8 # no of point to calc fundamental matrix
-    t = 2 # pixel threashold
-    Tratio = 0.95 # majority threashold
     print('finding Fundamentals')
     for i in range(imageNos -1):
         imgA = i
@@ -129,9 +125,8 @@ for pathI in paths:
                 y = ptI1[1]
                 x = ptI1[0]
                 Iout[y_,x_] = I1[y,x]
-
     Iout = Iout.astype(np.uint8)
     # plt.imshow(Iout)
     # plt.show()
     cv.imwrite('../result/'+pathI+ 'scale' + str(width)+'width'+str(width_epipolar)+method+'.png', Iout)
-    print('check ../result/')
+print('check ../result/')
