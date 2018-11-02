@@ -71,7 +71,7 @@ def findCustomDiscriptor(image, Points, d, listOfPoints, channel='RGB', method='
             kplist1 = []
             for i in range(len(listOfPoints)):
                 x, y = listOfPoints[i]
-                kplist1.append(cv.KeyPoint(x, y, 4))
+                kplist1.append(cv.KeyPoint(x, y, 8))
             kp1,des1 = sift.compute(image, kplist1)
             for i in range(len(listOfPoints)):
                 d[listOfPoints[i]] = des1[i]

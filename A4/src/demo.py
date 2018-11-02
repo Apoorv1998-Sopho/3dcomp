@@ -15,13 +15,13 @@ import matplotlib.pyplot as plt
 paths = ['I1','I2','I3','I4']
 for pathI in paths:
     path = '../data/' + pathI + '/'
-    imagesNames = ['a.jpg', 'b.jpg']
-    scale = (0.1, 0.1)
+    imagesNames = ['a.png', 'b.png']
+    width = 300
     images = {} # will have 3 channel color imgs
     imageNos = len(imagesNames)
     imgB = 1
-    width_epipolar = 5 # width/2 of the epiline to chck correspondences
-    method = 'local' # when we use sift or basic discriptor
+    width_epipolar = 4 # width/2 of the epiline to chck correspondences
+    method = 'SIFT' # when we use sift or basic discriptor
     channel = 'RGB' # when we use basic dicriptor
 
     ##########################################################
@@ -32,7 +32,10 @@ for pathI in paths:
         img = imagesNames[i]
         print(path + img)
         temp = cv.imread(path + img)
-        temp = cv.resize(temp, None, fx=scale[0], fy=scale[1], interpolation=cv.INTER_CUBIC)
+        scale_percent = width*100/temp.shape[1]
+        height = int(temp.shape[0] * scale_percent / 100)
+        dim = (width, height) 
+        temp = cv.resize(temp, dim, interpolation=cv.INTER_CUBIC)
         images[i]=temp
     del temp
 
@@ -130,5 +133,5 @@ for pathI in paths:
     Iout = Iout.astype(np.uint8)
     # plt.imshow(Iout)
     # plt.show()
-    cv.imwrite('../result/'+pathI+'width'+str(width_epipolar)+method+'.jpg', Iout)
+    cv.imwrite('../result/'+pathI+ 'scale' + str(width)+'width'+str(width_epipolar)+method+'.png', Iout)
     print('check ../result/')
