@@ -64,7 +64,7 @@ def findValidPoints(epiline, dim, width=2, padd=1):
 def findCustomDiscriptor(image, Points, d, listOfPoints, channel='RGB', method='local'):
     discriptors = {}
 
-    if method == 'SIFT':
+    if method == 'sift':
         if len(d) == 0:
             # print('one timeer')
             sift = cv.xfeatures2d.SIFT_create()

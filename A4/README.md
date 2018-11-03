@@ -17,7 +17,7 @@ matplotlib 3.0.0
 
 ### Details
 * I allow setting a variable `width_epipolar` to make the line thicker on which we want to find the correspondences.
-* I have used `lowe's ratio = 0.85` in finding good keypoint matches as it increases the reliability of the key point matches between images.
+* I have used `lowe's ratio` in finding good keypoint matches as it increases the reliability of the key point matches between images.
 * I take in a variable `method` that can be set to `SIFT`, `local` telling which descriptor to use. `local` here refers to the local 3x3 patch of RGB or LAB values.
 * I have used **SIFT** key points to match the points on an epipolar line as they seemed to give the best results.
 
@@ -26,8 +26,8 @@ matplotlib 3.0.0
 ### Results
 
 Reconstructed images,
-![I1](https://i.imgur.com/Nt9DVYF.png)
-![I2](https://i.imgur.com/Z11m7El.png)
-![I3](https://i.imgur.com/6jVtd6O.png)
+![I1](https://i.imgur.com/beWHEzt.png) paramters used: discriptor:`'sift'` | width:`112` | lowsR:`0.70` | width_epipolar:`3`
+![I2](https://i.imgur.com/KRfuPeY.png) paramters used: discriptor:`'sift'` | width:`112` | lowsR:`0.75` | width_epipolar:`3`
+![I3](https://i.imgur.com/ufcSCLQ.png) paramters used: discriptor:`'sift'` | width:`200` | lowsR:`0.70` | width_epipolar:`3`
 
 ---
